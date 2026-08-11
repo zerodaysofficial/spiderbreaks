@@ -10,8 +10,8 @@ have been redesigned for a clearer controller-first experience.
 - User-provided Spider mask icon, optimized locally for the PS5 browser
 - Dark red/blue launch screen with a focused `BRAND NEW JAILBREAK` action
 - Five-step runtime rail: WebKit, kernel, kernel R/W, root and ELF loader
-- Full-screen payload selector with ready, sending, sent and failed states
-- Directional controller navigation and automatic focus scrolling
+- Full-screen `/payloads/` directory with ready, sending, sent and failed states
+- Directional controller navigation in a separate, PS5-friendly document
 - No external fonts, trackers or visual dependencies
 - All interface assets are stored locally
 
@@ -19,10 +19,14 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=21`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=33`
 
-After a successful chain, the in-page menu sends one selected ELF at a time to
-the local loader on `127.0.0.1:9021`.
+After a successful chain, the runtime opens `payloads/index.html` inside the
+same live page. The separate directory document keeps the exploit runtime in
+memory while sending one selected ELF at a time to `127.0.0.1:9021`.
+
+Opening `payloads/` directly is a safe visual preview only. A standalone web
+page cannot send a raw ELF to the loader without the live parent runtime.
 
 ## Stability guardrails
 
@@ -33,9 +37,9 @@ the local loader on `127.0.0.1:9021`.
 - Runtime HUD updates and decorative compositing are suspended during race
   windows, then restored after the timing-sensitive section finishes.
 - The runtime icon is a separate 192 px asset to reduce decoded image memory.
-- The payload cards use a single-column block layout with fixed row heights and
-  inline visibility fallbacks. It avoids Grid, nested Flexbox, `gap` and
-  calculated card dimensions in the PS5 browser.
+- The payload directory uses a separate same-origin frame and a single-column
+  fixed-height list. This avoids repainting the exploit document's card tree
+  after the kernel stages and avoids Grid, nested Flexbox and focus scrolling.
 
 These changes do not alter exploit primitives, firmware offsets, race counts,
 timeouts, syscall sequences, kernel-write targets or bundled payloads. A kernel

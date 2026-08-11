@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050812">
+<title>SpiderKit // Payloads</title>
+<link rel="icon" href="../ui/spider-icon-runtime.png" type="image/png">
+<style>
+  * { box-sizing:border-box; }
+  html,body { margin:0; min-height:100%; background:#050812; color:#edf2ff; }
+  body {
+    padding:22px 24px 36px;
+    background:linear-gradient(145deg,#080c18,#111b31 58%,#080b14);
+    font:14px/1.35 ui-monospace,Consolas,monospace;
+  }
+  #folder { width:90%; max-width:980px; margin:0 auto; }
+  #head {
+    position:relative; min-height:76px; margin:0 0 16px; padding:10px 190px 10px 78px;
+    border-bottom:1px solid #303b55;
+  }
+  #logo {
+    position:absolute; top:5px; left:0; display:block; width:62px; height:62px;
+    padding:3px; border:1px solid #a84059; border-radius:50%; background:#fff;
+  }
+  #head p { margin:3px 0 6px; color:#ff5777; font-size:10px; font-weight:bold; letter-spacing:.18em; }
+  h1 { margin:0; font:900 30px/1 system-ui,sans-serif; letter-spacing:-.03em; }
+  #bridge {
+    position:absolute; top:23px; right:0; min-width:170px; padding:9px 10px;
+    border:1px solid #34415f; border-radius:8px; color:#8f9bb3; text-align:center;
+    font-size:9px; font-weight:bold; letter-spacing:.1em;
+  }
+  #bridge.online { color:#94f0c0; border-color:#2d7b5b; background:#0c2a20; }
+  #files { display:block; width:100%; }
+  .file {
+    position:relative; display:block; width:100%; height:68px; margin:0 0 9px;
+    padding:10px 116px 8px 76px; overflow:hidden; color:#edf2ff;
+    border:1px solid #2c3851; border-radius:11px; background:#0a1020;
+    text-decoration:none;
+  }
+  .file:focus { outline:3px solid #fff; outline-offset:1px; border-color:#fff; background:#451124; }
+  .file .type {
+    position:absolute; top:8px; left:10px; width:52px; height:50px;
+    border:1px solid #3b4b6c; border-radius:8px; color:#dce7ff; background:#131e35;
+    font:bold 12px/50px ui-monospace,Consolas,monospace; text-align:center;
+  }
+  .file strong { display:block; margin:2px 0 6px; font:800 14px/1.1 system-ui,sans-serif; }
+  .file small { display:block; color:#8390a8; font-size:9px; letter-spacing:.035em; }
+  .file .state {
+    position:absolute; top:19px; right:12px; width:86px; padding:7px 4px;
+    border:1px solid #34415b; border-radius:12px; color:#95a1b8;
+    text-align:center; font-size:8px; font-weight:bold; letter-spacing:.09em;
+  }
+  body.busy .file { opacity:.38; }
+  body.busy .file.active { opacity:1; }
+  .file[data-state="sending"] { border-color:#397cf1; background:#101f3f; }
+  .file[data-state="sending"] .state { color:#afd0ff; border-color:#397cf1; }
+  .file[data-state="sent"] { border-color:#2d8a62; background:#0d281f; }
+  .file[data-state="sent"] .state { color:#9bf0c4; border-color:#2d8a62; }
+  .file[data-state="failed"] { border-color:#e83258; background:#32101a; }
+  .file[data-state="failed"] .state { color:#ff9caf; border-color:#e83258; }
+  #message {
+    min-height:34px; margin:14px 0 0; padding:9px 12px; color:#8f9bb1;
+    border:1px solid #252f45; border-radius:8px; background:#070b15;
+    font-size:9px; letter-spacing:.07em;
+  }
+  #message.error { color:#ff9caf; border-color:#7d263b; }
+  #system { margin:10px 2px 0; color:#59657c; font-size:8px; letter-spacing:.07em; }
+  @media(max-width:700px) {
+    body { padding:15px 12px 28px; }
+    #folder { width:96%; }
+    #head { padding-right:0; }
+    #bridge { display:none; }
+    .file { padding-right:96px; }
+    .file .state { width:72px; }
+  }
+  @media(max-height:650px) {
+    body { padding-top:12px; }
+    #head { min-height:62px; margin-bottom:10px; }
+    #logo { width:52px; height:52px; }
+    #head { padding-left:65px; }
+    h1 { font-size:24px; }
+    #bridge { top:14px; }
+    .file { height:57px; margin-bottom:6px; padding-top:7px; padding-left:66px; }
+    .file .type { top:6px; left:8px; width:44px; height:43px; line-height:43px; }
+    .file .state { top:13px; }
+  }
+</style>
+</head>
+<body>
+<main id="folder">
+  <header id="head">
+    <img id="logo" src="../ui/spider-icon-runtime.png" alt="">
+    <p>ELF LOADER // /PAYLOADS/</p>
+    <h1>PAYLOAD DIRECTORY</h1>
+    <span id="bridge">DIRECTORY PREVIEW</span>
+  </header>
+
+  <section id="files" aria-label="Selectable ELF payloads">
+    <a class="file" href="ftpsrv-ps5.elf" data-name="ftpsrv-ps5.elf" data-state="default"><span class="type">FTP</span><strong>ftpsrv-ps5.elf</strong><small>FTP server // 188 KiB</small><span class="state">READY</span></a>
+    <a class="file" href="gdbsrv-ps5.elf" data-name="gdbsrv-ps5.elf" data-state="default"><span class="type">GDB</span><strong>gdbsrv-ps5.elf</strong><small>Remote debugger // 171 KiB</small><span class="state">READY</span></a>
+    <a class="file" href="klogsrv-ps5.elf" data-name="klogsrv-ps5.elf" data-state="default"><span class="type">LOG</span><strong>klogsrv-ps5.elf</strong><small>Kernel log stream // 133 KiB</small><span class="state">READY</span></a>
+    <a class="file" href="shsrv-ps5.elf" data-name="shsrv-ps5.elf" data-state="default"><span class="type">&gt;_</span><strong>shsrv-ps5.elf</strong><small>Remote shell server // 964 KiB</small><span class="state">READY</span></a>
+    <a class="file" href="websrv-ps5.elf" data-name="websrv-ps5.elf" data-state="default"><span class="type">WEB</span><strong>websrv-ps5.elf</strong><small>Local web server // 1.6 MiB</small><span class="state">READY</span></a>
+  </section>
+
+  <div id="message">PRESS × ON A FILE TO SEND IT TO 127.0.0.1:9021 // UI 33</div>
+  <div id="system">SYSTEM COMPONENTS (ELFLDR / KEXP / KSTUFF) ARE NOT EXPOSED AS USER PAYLOADS.</div>
+</main>
+
+<script>
+(function () {
+    var files = document.getElementsByClassName("file");
+    var bridge = document.getElementById("bridge");
+    var message = document.getElementById("message");
+    var runtime = false;
+
+    try {
+        runtime = window.parent !== window
+            && typeof window.parent.spiderKitSelectPayload === "function";
+    } catch (e) { runtime = false; }
+
+    if (runtime) {
+        bridge.className = "online";
+        bridge.textContent = "ELF LOADER CONNECTED";
+    } else {
+        message.className = "error";
+        message.textContent = "DIRECTORY PREVIEW ONLY // START BRAND NEW JAILBREAK BEFORE SELECTING A FILE.";
+    }
+
+    function findFile(name) {
+        for (var i = 0; i < files.length; ++i)
+            if (files[i].getAttribute("data-name") === name) return files[i];
+        return null;
+    }
+
+    function setFileState(file, state) {
+        var labels = { "default":"READY", "sending":"SENDING", "sent":"SENT", "failed":"FAILED" };
+        file.setAttribute("data-state", state);
+        var label = file.getElementsByClassName("state")[0];
+        if (label) label.textContent = labels[state] || String(state).toUpperCase();
+    }
+
+    window.spiderKitPayloadState = function (name, state, detail) {
+        if (name === "*") {
+            if (state === "busy") {
+                document.body.className = "busy";
+                for (var i = 0; i < files.length; ++i)
+                    files[i].className = files[i].getAttribute("data-name") === detail
+                        ? "file active" : "file";
+            } else if (state === "blocked") {
+                document.body.className = "busy";
+                message.className = "error";
+                message.textContent = "SENDER BLOCKED // REBOOT REQUIRED // " + detail;
+            } else {
+                document.body.className = "";
+                for (var j = 0; j < files.length; ++j) files[j].className = "file";
+            }
+            return;
+        }
+        var file = findFile(name);
+        if (!file) return;
+        setFileState(file, state);
+        if (state === "sending") {
+            message.className = "";
+            message.textContent = "SENDING " + name + " TO 127.0.0.1:9021...";
+        } else if (state === "sent") {
+            message.className = "";
+            message.textContent = "SENT // " + name + (detail ? " // " + detail : "");
+        } else if (state === "failed") {
+            message.className = "error";
+            message.textContent = "FAILED // " + name + (detail ? " // " + detail : "");
+        }
+    };
+
+    for (var i = 0; i < files.length; ++i) {
+        files[i].onclick = function (event) {
+            if (event && event.preventDefault) event.preventDefault();
+            var name = this.getAttribute("data-name");
+            if (!runtime) {
+                message.className = "error";
+                message.textContent = "START BRAND NEW JAILBREAK FIRST // THIS PAGE ALONE CANNOT EXECUTE " + name;
+                return false;
+            }
+            if (document.body.className === "busy") return false;
+            setFileState(this, "sending");
+            try {
+                if (!window.parent.spiderKitSelectPayload(name))
+                    setFileState(this, "failed");
+            } catch (error) {
+                setFileState(this, "failed");
+                message.className = "error";
+                message.textContent = "FAILED // " + (error && error.message ? error.message : error);
+            }
+            return false;
+        };
+    }
+
+    document.addEventListener("keydown", function (event) {
+        var key = event.key || "";
+        if (key !== "ArrowUp" && key !== "ArrowDown" && key !== "Home" && key !== "End") return;
+        var current = 0;
+        for (var i = 0; i < files.length; ++i)
+            if (files[i] === document.activeElement) current = i;
+        var next = current;
+        if (key === "ArrowUp") next = Math.max(0, current - 1);
+        if (key === "ArrowDown") next = Math.min(files.length - 1, current + 1);
+        if (key === "Home") next = 0;
+        if (key === "End") next = files.length - 1;
+        if (event.preventDefault) event.preventDefault();
+        try { files[next].focus(); } catch (e) { }
+    });
+
+    if (files.length) {
+        window.setTimeout(function () {
+            try { files[0].focus(); } catch (e) { }
+        }, 50);
+    }
+})();
+</script>
+</body>
+</html>

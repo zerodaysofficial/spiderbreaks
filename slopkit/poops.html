@@ -110,87 +110,22 @@
   #nav { display:none!important; }
   #arm { width:min(680px,90vw); padding:18px; color:#f2c886; text-align:center; }
   #wrap,#tally,#summary { display:none!important; }
-  #payloadMenu { display:none; width:min(900px,92vw); margin:2px auto 30px; }
-  #payloadMenu.on { display:block; }
-  .menuHead { position:relative; display:block; min-height:58px; margin:8px 0 15px; }
-  .menuTitle { display:block; min-height:58px; }
-  .menuTitle::after { content:""; display:block; clear:both; }
-  .menuIcon { float:left; width:52px; height:52px; margin:0 13px 0 0; padding:2px; object-fit:cover; border-radius:50%; border:1px solid rgba(255,255,255,.24); background:#fff; box-shadow:0 0 28px rgba(255,23,75,.22); }
-  .menuTitle > div { display:block; padding-top:7px; }
-  .menuHead p { margin:0 0 5px; color:var(--red2); font:800 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.16em; }
-  .menuHead h2 { margin:0; font:900 26px/1 system-ui,sans-serif; letter-spacing:-.035em; }
-  .menuMeta { position:absolute; top:10px; right:0; display:block; color:#758198; font-size:9px; letter-spacing:.08em; text-align:right; }
-  .menuMeta b,.menuMeta span { display:block; }
-  .menuMeta b { margin-bottom:7px; color:#d7dfef; font-size:10px; letter-spacing:.12em; }
-  .payloadGrid { display:block!important; width:100%; height:auto!important; min-height:300px; margin:0; }
-  .payloadTile {
-    position:relative; display:block!important; width:auto; height:58px;
-    min-height:58px; margin:0 0 7px; padding:6px 88px 6px 72px; overflow:hidden;
-    color:#edf2ff; text-decoration:none!important; background:rgba(10,14,27,.88);
-    border:1px solid var(--line); border-radius:13px;
-    box-shadow:0 16px 35px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.035);
-    transition:transform .13s,border-color .13s,background .13s,opacity .13s;
-  }
-  .payloadTile::after { content:""; position:absolute; top:0; bottom:0; left:0; width:3px; background:linear-gradient(var(--red2),#92052b); opacity:.75; }
-  .payloadTile:focus { outline:none; transform:translateY(-2px); border-color:#fff; background:linear-gradient(105deg,rgba(110,6,32,.65),rgba(12,18,34,.92)); box-shadow:0 0 0 3px rgba(255,255,255,.11),0 20px 44px rgba(0,0,0,.34); }
-  .payloadTile.busy { opacity:.35; }
-  .payloadTile[data-state="sending"] { border-color:rgba(52,120,255,.75); }
-  .payloadTile[data-state="sending"]::after { background:var(--blue); }
-  .payloadTile[data-state="sent"] { border-color:rgba(69,226,154,.65); }
-  .payloadTile[data-state="sent"]::after { background:var(--green); }
-  .payloadTile[data-state="failed"] { border-color:rgba(255,23,75,.8); }
-  .payloadIcon { position:absolute; top:5px; left:10px; width:48px; height:48px; display:block; border:1px solid rgba(125,148,195,.24); border-radius:11px; color:#d9e5ff; background:linear-gradient(145deg,#172038,#090e1c); font:900 12px/48px ui-monospace,Consolas,monospace; text-align:center; }
-  .payloadCopy { display:block; min-width:0; padding-top:5px; }
-  .payloadCopy strong { display:block; font:800 13px/1.1 system-ui,sans-serif; letter-spacing:.035em; }
-  .payloadCopy small { display:block; margin-top:6px; color:#748198; font-size:9px; letter-spacing:.04em; }
-  .payloadState { position:absolute; top:15px; right:12px; display:block; min-width:64px; margin:0; padding:7px 8px; border:1px solid var(--line); border-radius:999px; color:#8d9ab0; text-align:center; font-size:8px; font-weight:800; letter-spacing:.08em; }
-  .payloadTile[data-state="sending"] .payloadState { color:#9fc0ff; border-color:rgba(52,120,255,.45); }
-  .payloadTile[data-state="sent"] .payloadState { color:#9ff4cb; border-color:rgba(69,226,154,.4); }
-  .payloadTile[data-state="failed"] .payloadState { color:#ff9fb1; border-color:rgba(255,23,75,.45); }
-  body.loader-ready { justify-content:flex-start; overflow:hidden; padding:0; }
-  body.loader-ready .runtimePanel { width:100%; }
-  body.loader-ready .runtimePanel > #cat,
-  body.loader-ready .runtimePanel > h1,
-  body.loader-ready .runtimePanel > .sub,
-  body.loader-ready .runtimePanel > #runtimeHud,
-  body.loader-ready .runtimePanel > #stage { display:none; }
-  body.loader-ready #scr { display:none; }
-  body.loader-ready #payloadMenu {
-    position:fixed; z-index:6; top:64px; right:3.5vw; bottom:24px; left:3.5vw;
-    width:auto; margin:0; padding:20px; overflow:auto; display:block;
-    border:1px solid rgba(139,161,204,.24); border-radius:18px;
-    background:linear-gradient(145deg,rgba(10,14,27,.97),rgba(5,8,16,.98));
-    box-shadow:0 30px 90px rgba(0,0,0,.52),inset 0 1px rgba(255,255,255,.05);
-  }
-  body.loader-ready .menuHead { margin:0 0 16px; }
-  body.loader-ready .payloadGrid { display:block!important; }
+  #payloadMenu { display:none!important; }
+  #payloadBrowser { display:none; width:100%; height:calc(100vh - 48px); margin:48px 0 0; border:0; background:#050812; }
+  body.loader-ready { display:block; overflow:hidden; min-height:100vh; padding:0; }
+  body.loader-ready::before,
+  body.loader-ready::after { display:none; }
+  body.loader-ready .runtimePanel,
+  body.loader-ready #failureMessage { display:none!important; }
+  body.loader-ready #payloadBrowser { display:block!important; }
   body.loader-ready #dt { display:none; }
   #dt { position:fixed; right:20px; bottom:18px; z-index:9; padding:8px 10px; color:#566177; background:rgba(7,10,19,.8); border:1px solid var(--line); border-radius:8px; font:700 9px/1 ui-monospace,Consolas,monospace; }
   #dt:focus { outline:2px solid #fff; }
-  @media(max-width:900px) {
-    body.loader-ready #payloadMenu { top:58px; right:18px; bottom:18px; left:18px; padding:16px; }
-  }
   @media(max-width:680px) {
     body { padding-left:14px; padding-right:14px; }
     .runtimeBrand { left:16px; right:16px; }
     #cat { width:138px; height:155px; }
     #phaseRail { gap:4px; } .phase strong { font-size:7px; } .phase span { display:none; }
-    .menuMeta { display:none; }
-    body.loader-ready #payloadMenu { top:54px; right:12px; bottom:12px; left:12px; padding:14px; }
-  }
-  @media(max-height:650px) {
-    body.loader-ready #payloadMenu { top:50px; right:14px; bottom:10px; left:14px; padding:12px; }
-    body.loader-ready .menuHead { margin-bottom:10px; }
-    .menuHead,.menuTitle { min-height:46px; }
-    .menuIcon { width:44px; height:44px; }
-    .menuTitle > div { padding-top:3px; }
-    .menuHead h2 { font-size:22px; }
-    .payloadGrid { min-height:270px; }
-    .payloadTile { height:51px; min-height:51px; margin-bottom:4px; padding:4px 82px 4px 62px; }
-    .payloadIcon { top:4px; left:7px; width:42px; height:42px; line-height:42px; }
-    .payloadCopy { padding-top:4px; }
-    .payloadState { top:11px; right:8px; }
-    .payloadCopy small { display:none; }
   }
   @media(prefers-reduced-motion:reduce) { * { transition:none!important; } }
 </style>
@@ -221,17 +156,11 @@
 <pre id="early"></pre>
 <pre id="scr"></pre>
 <div id="payloadMenu">
-  <div class="menuHead">
-    <div class="menuTitle"><img class="menuIcon" src="../ui/spider-icon-runtime.png" alt=""><div><p>ELF LOADER ONLINE</p><h2>SELECT A PAYLOAD</h2></div></div>
-    <div class="menuMeta"><b>PRESS × TO SEND</b><span>LOCAL TARGET 127.0.0.1:9021 // UI 32</span></div>
-  </div>
-  <div class="payloadGrid" style="display:block;width:100%;height:auto;min-height:300px">
-    <a class="payloadTile" style="display:block" href="#" data-name="ftpsrv-ps5.elf" data-key="ftp" data-state="default"><span class="payloadIcon">FTP</span><span class="payloadCopy"><strong>FTP Server</strong><small>Browse and transfer console files</small></span><span class="payloadState">READY</span></a>
-    <a class="payloadTile" style="display:block" href="#" data-name="gdbsrv-ps5.elf" data-key="gdb" data-state="default"><span class="payloadIcon">GDB</span><span class="payloadCopy"><strong>GDB Server</strong><small>Attach a remote debugging client</small></span><span class="payloadState">READY</span></a>
-    <a class="payloadTile" style="display:block" href="#" data-name="klogsrv-ps5.elf" data-key="klog" data-state="default"><span class="payloadIcon">LOG</span><span class="payloadCopy"><strong>Kernel Log</strong><small>Stream low-level runtime messages</small></span><span class="payloadState">READY</span></a>
-    <a class="payloadTile" style="display:block" href="#" data-name="shsrv-ps5.elf" data-key="shell" data-state="default"><span class="payloadIcon">&gt;_</span><span class="payloadCopy"><strong>Shell Server</strong><small>Open the remote command service</small></span><span class="payloadState">READY</span></a>
-    <a class="payloadTile" style="display:block" href="#" data-name="websrv-ps5.elf" data-key="web" data-state="default"><span class="payloadIcon">WEB</span><span class="payloadCopy"><strong>Web Server</strong><small>Start the local HTTP service</small></span><span class="payloadState">READY</span></a>
-  </div>
+  <a href="#" data-name="ftpsrv-ps5.elf" data-state="default"></a>
+  <a href="#" data-name="gdbsrv-ps5.elf" data-state="default"></a>
+  <a href="#" data-name="klogsrv-ps5.elf" data-state="default"></a>
+  <a href="#" data-name="shsrv-ps5.elf" data-state="default"></a>
+  <a href="#" data-name="websrv-ps5.elf" data-state="default"></a>
 </div>
 <div id="nav"></div>
 <div id="arm" hidden>Open this page with <b>?go=1</b> to arm it. Nothing runs
@@ -245,6 +174,9 @@ otherwise.</div>
 <div id="tally"></div>
 <div id="summary"></div>
 </main>
+
+<iframe id="payloadBrowser" title="SpiderKit payload directory"
+  data-src="../payloads/?embedded=1&amp;v=33"></iframe>
 
 <div id="console" hidden></div>
 
@@ -291,7 +223,7 @@ const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
 
 const PROGRESS_KEY = "slopkit-poops:next";
 const RUNLOG_KEY = "slopkit-poops:last";
-const REV = "slopkit-poops-32-payload-block-fallback";
+const REV = "slopkit-poops-33-payload-directory-frame";
 
 function storeGet(k) {
     try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
@@ -547,6 +479,8 @@ const tallyEl = document.getElementById("tally");
 const summaryEl = document.getElementById("summary");
 const navEl = document.getElementById("nav");
 const payloadMenuEl = document.getElementById("payloadMenu");
+const payloadBrowserEl = document.getElementById("payloadBrowser");
+const runtimePanelEl = document.getElementsByClassName("runtimePanel")[0];
 const rowByKey = new Map();
 let payloadSendBusy = false;
 const PAYLOAD_PORT = 9021;
@@ -558,64 +492,41 @@ let payloadSocketOptionStore = null;
 let payloadSendTimeoutStore = null;
 let payloadSenderBlocked = "";
 
+function sizePayloadBrowser() {
+    if (!payloadBrowserEl) return;
+    const height = Math.max(300, (window.innerHeight || 720) - 48);
+    payloadBrowserEl.style.height = height + "px";
+}
+
+function notifyPayloadBrowser(name, state, detail) {
+    if (!payloadBrowserEl) return;
+    try {
+        const child = payloadBrowserEl.contentWindow;
+        if (child && typeof child.spiderKitPayloadState === "function")
+            child.spiderKitPayloadState(name, state, detail || "");
+    } catch (e) { }
+}
+
 function showPayloadMenu() {
     navEl.textContent = "";
     navEl.style.display = "none";
     document.body.classList.add("loader-ready");
-    payloadMenuEl.className = "on";
-    payloadMenuEl.style.display = "block";
-    payloadMenuEl.style.visibility = "visible";
-    const grid = payloadMenuEl.getElementsByClassName("payloadGrid")[0];
-    if (grid) {
-        grid.style.display = "block";
-        grid.style.width = "100%";
-        grid.style.height = "auto";
-        grid.style.minHeight = "300px";
+    if (runtimePanelEl) runtimePanelEl.style.display = "none";
+    payloadMenuEl.style.display = "none";
+    sizePayloadBrowser();
+    payloadBrowserEl.style.display = "block";
+    const source = payloadBrowserEl.getAttribute("data-src");
+    if (!payloadBrowserEl.getAttribute("src") && source)
+        payloadBrowserEl.setAttribute("src", source);
+    if (!payloadBrowserEl.__resizeBound) {
+        window.addEventListener("resize", sizePayloadBrowser);
+        payloadBrowserEl.__resizeBound = true;
     }
-    const tiles = payloadMenuEl.getElementsByTagName("a");
-    for (let i = 0; i < tiles.length; ++i) {
-        tiles[i].style.display = "block";
-        tiles[i].style.visibility = "visible";
-    }
-    if (!payloadMenuEl.__controllerNav) {
-        payloadMenuEl.addEventListener("keydown", function (event) {
-            const key = event.key || "";
-            if (!/^Arrow(Left|Right|Up|Down)$/.test(key)
-                && key !== "Home" && key !== "End") return;
-            const links = payloadMenuEl.getElementsByTagName("a");
-            let current = 0;
-            for (let i = 0; i < links.length; ++i)
-                if (links[i] === document.activeElement) current = i;
-            const columns = 1;
-            let next = current;
-            if (key === "ArrowLeft") next = Math.max(0, current - 1);
-            if (key === "ArrowRight") next = Math.min(links.length - 1, current + 1);
-            if (key === "ArrowUp") next = Math.max(0, current - columns);
-            if (key === "ArrowDown") next = Math.min(links.length - 1, current + columns);
-            if (key === "Home") next = 0;
-            if (key === "End") next = links.length - 1;
-            event.preventDefault();
-            try { links[next].focus(); } catch (e) { }
-        });
-        for (let i = 0; i < tiles.length; ++i) {
-            tiles[i].addEventListener("focus", function () {
-                try {
-                    this.scrollIntoView({ block: "nearest", inline: "nearest" });
-                } catch (e) {
-                    try { this.scrollIntoView(false); } catch (ignored) { }
-                }
-            });
-        }
-        payloadMenuEl.__controllerNav = true;
-    }
-    if (tiles.length) try { tiles[0].focus(); } catch (e) { }
 }
 
 function setPayloadTileState(tile, state) {
-    const labels = { "default": "READY", "sending": "SENDING", "sent": "SENT", "failed": "FAILED" };
     tile.setAttribute("data-state", state);
-    const status = tile.getElementsByClassName("payloadState")[0];
-    if (status) status.textContent = labels[state] || String(state).toUpperCase();
+    notifyPayloadBrowser(tile.getAttribute("data-name"), state, "");
 }
 
 function payloadIsListed(name) {
@@ -772,6 +683,7 @@ async function sendPayloadToElfldr(name) {
 async function sendPayloadInPlace(name, tile) {
     if (payloadSendBusy) return;
     payloadSendBusy = true;
+    notifyPayloadBrowser("*", "busy", name);
     const tiles = payloadMenuEl.getElementsByTagName("a");
     for (let i = 0; i < tiles.length; ++i)
         tiles[i].className = "payloadTile busy";
@@ -781,6 +693,7 @@ async function sendPayloadInPlace(name, tile) {
         const result = await sendPayloadToElfldr(name);
         tile.className = "payloadTile";
         setPayloadTileState(tile, "sent");
+        notifyPayloadBrowser(name, "sent", result.bytes + " bytes sent");
         flushMark("ELF-SENT", "name=" + clean(result.name) + "-bytes="
             + result.bytes + "-target=" + clean(result.target)
             + "-port=" + result.port);
@@ -790,6 +703,8 @@ async function sendPayloadInPlace(name, tile) {
     } catch (error) {
         tile.className = "payloadTile";
         setPayloadTileState(tile, "failed");
+        notifyPayloadBrowser(name, "failed",
+            clean(error && error.message ? error.message : error));
         flushMark("ELF-SEND-FAILED", "name=" + clean(name) + "-why="
             + clean(error && error.message ? error.message : error));
     } finally {
@@ -798,12 +713,13 @@ async function sendPayloadInPlace(name, tile) {
             for (let i = 0; i < tiles.length; ++i)
                 tiles[i].className = "payloadTile busy";
             setCatResult(false);
+            notifyPayloadBrowser("*", "blocked", payloadSenderBlocked);
             flushMark("ELF-SENDER-BLOCKED", clean(payloadSenderBlocked));
         } else {
             payloadSendBusy = false;
             for (let i = 0; i < tiles.length; ++i)
                 if (tiles[i] !== tile) tiles[i].className = "payloadTile";
-            try { tile.focus(); } catch (e) { }
+            notifyPayloadBrowser("*", "idle", name);
         }
     }
 }
@@ -819,6 +735,27 @@ async function sendPayloadInPlace(name, tile) {
         };
     }
 }
+
+window.spiderKitSelectPayload = function (name) {
+    if (typeof name !== "string" || !payloadIsListed(name)) {
+        notifyPayloadBrowser(String(name || ""), "failed",
+            "payload is not in the approved runtime list");
+        return false;
+    }
+    if (payloadSendBusy || payloadSenderBlocked) {
+        notifyPayloadBrowser(name, "failed",
+            payloadSenderBlocked || "another payload is being sent");
+        return false;
+    }
+    const tiles = payloadMenuEl.getElementsByTagName("a");
+    for (let i = 0; i < tiles.length; ++i) {
+        if (tiles[i].getAttribute("data-name") === name) {
+            sendPayloadInPlace(name, tiles[i]);
+            return true;
+        }
+    }
+    return false;
+};
 
 function stage(text, cls) {
     if (cls === "bad") setCatResult(false);
