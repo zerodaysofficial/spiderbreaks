@@ -118,8 +118,34 @@
   h1 { margin: 0; font-size: clamp(54px, 7vw, 88px); line-height: .88; letter-spacing: -.065em; font-weight: 900; }
   h1 span { display: block; color: transparent; -webkit-text-stroke: 1px rgba(192, 211, 255, .46); font-size: .47em; letter-spacing: .23em; margin: 18px 0 0 5px; }
   .lead { max-width: 470px; margin: 24px 0 26px; color: #a6b0c5; font-size: 15px; line-height: 1.7; }
-  .specs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .specs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
   .specs span { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: #bfc7d8; background: rgba(10,14,27,.52); font: 700 10px/1 ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+  .payload-lock {
+    width:100%; max-width:560px; margin:0 0 17px; padding:10px;
+    border:1px solid rgba(128,145,181,.2); border-radius:12px;
+    background:rgba(6,10,20,.68); box-shadow:inset 0 1px rgba(255,255,255,.025);
+  }
+  .payload-lock-head {
+    display:flex; align-items:center; justify-content:space-between; margin:0 2px 9px;
+    color:#78849a; font:800 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em;
+  }
+  .payload-lock-head b { color:#ff6a84; font-size:8px; }
+  .payload-lock-list { display:flex; width:100%; gap:6px; }
+  .locked-payload {
+    position:relative; min-width:0; height:58px; flex:1 1 0; margin:0; padding:8px 3px 6px;
+    overflow:hidden; border:1px solid #2a3449; border-radius:8px; color:#7e8a9f;
+    background:#0b101d; text-align:center; opacity:.7;
+    font-family:ui-monospace,Consolas,monospace; pointer-events:none;
+    -webkit-appearance:none; appearance:none;
+  }
+  .locked-payload strong { display:block; margin:0 0 7px; color:#a8b2c4; font-size:11px; letter-spacing:.06em; }
+  .locked-payload small { display:block; overflow:hidden; font-size:7px; text-overflow:ellipsis; white-space:nowrap; }
+  .locked-payload::after {
+    content:""; position:absolute; top:0; right:0; bottom:0; left:0;
+    background:repeating-linear-gradient(135deg,transparent 0 8px,rgba(255,255,255,.018) 9px 10px);
+  }
+  .payload-lock.starting { border-color:rgba(52,120,255,.45); }
+  .payload-lock.starting .payload-lock-head b { color:#8eb5ff; }
   .action {
     position: relative; isolation: isolate; width: min(360px, 100%); min-height: 70px;
     display: flex; align-items: center; justify-content: space-between; gap: 20px;
@@ -155,8 +181,13 @@
     .copy { margin: 0 auto; }
     .lead { margin-left: auto; margin-right: auto; }
     .specs { justify-content: center; }
+    .payload-lock { margin-left:auto; margin-right:auto; text-align:left; }
     .action { margin: 0 auto; text-align: left; }
     .footer { align-items: flex-start; flex-direction: column; }
+  }
+  @media (max-width:480px) {
+    .payload-lock-list { flex-wrap:wrap; }
+    .locked-payload { flex:1 1 30%; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -175,7 +206,17 @@
       <h1 id="title">SPIDERKIT<span>THREAD THE SYSTEM</span></h1>
       <p class="lead">A controller-first launch interface for the PS5 WebKit chain, kernel stages and local ELF loader.</p>
       <div class="specs" aria-label="Runtime features"><span>FW 9.00—12.00</span><span>ROP CHAIN</span><span>ELF :9021</span></div>
-      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=33" tabindex="0">
+      <section id="payloadLock" class="payload-lock" aria-label="Payloads locked until the ELF loader is online" aria-disabled="true">
+        <div class="payload-lock-head"><span>PAYLOADS // STAGED</span><b id="payloadLockState">LOCKED UNTIL ELF LOADER</b></div>
+        <div class="payload-lock-list">
+          <button class="locked-payload" type="button" disabled><strong>FTP</strong><small>ftpsrv.elf</small></button>
+          <button class="locked-payload" type="button" disabled><strong>GDB</strong><small>gdbsrv.elf</small></button>
+          <button class="locked-payload" type="button" disabled><strong>KLOG</strong><small>klogsrv.elf</small></button>
+          <button class="locked-payload" type="button" disabled><strong>SHELL</strong><small>shsrv.elf</small></button>
+          <button class="locked-payload" type="button" disabled><strong>WEB</strong><small>websrv.elf</small></button>
+        </div>
+      </section>
+      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=34" tabindex="0">
         <span class="action-copy"><strong>BRAND NEW JAILBREAK</strong><small>START THE EXPLOIT SEQUENCE</small></span><span class="cross" aria-hidden="true">×</span>
       </a>
       <div id="status" aria-live="polite">PRESS × TO CONTINUE</div>
@@ -190,6 +231,8 @@ try {
   start.focus();
   start.addEventListener("click", function () {
     document.getElementById("status").textContent = "ENTERING THE WEBKIT CHAIN…";
+    document.getElementById("payloadLock").className = "payload-lock starting";
+    document.getElementById("payloadLockState").textContent = "WAITING FOR ELF LOADER";
   });
 } catch (e) {}
 </script>
