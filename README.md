@@ -1,4 +1,4 @@
-# SpiderKit — Spider Protocol UI40
+# SpiderKit — Spider Protocol UI41
 
 SpiderKit is a visual redesign of Jordy's `slopkit` host. The exploit chain,
 firmware offsets, kernel stages, loader flow and bundled binaries are retained
@@ -11,7 +11,7 @@ have been redesigned for a clearer controller-first experience.
 - Fully interactive Spider-Man-inspired red/blue launch experience
 - Clickable mask with a Spider-Sense pulse and controller-first focus states
 - Focused `BRAND NEW JAILBREAK` action and animated runtime handoff
-- Ten staged payloads visible but disabled on the initial page
+- Eleven staged payloads visible but disabled on the initial page
 - Five-step runtime rail: WebKit, kernel, kernel R/W, root and ELF loader
 - Runtime progress bar driven by the real firmware-offset load and exploit marks
 - In-page payload directory with ready, sending, sent and failed states
@@ -23,24 +23,35 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=40`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=41`
 
 After a successful chain, the runtime exposes its payload menu directly inside
 `slopkit/poops.html`, without navigating or creating a second frame. Selecting
 one entry sends that ELF to `127.0.0.1:9021`.
 
-The initial page only previews the ten payloads in a disabled state. They are
+The initial page only previews the eleven payloads in a disabled state. They are
 made selectable only after the runtime confirms that the ELF loader is online.
 
 The success screen switches to the local Spider-Man GIF only after the kernel
-and loader stages finish. The four additional payloads are `shadowmountplus`,
-`cheatrunner`, `ps5-backpork` and `pldmgr_v0.5.1`; the sender limit is 12 MiB
-and data is still copied through the existing 64 KiB staging buffer.
+and loader stages finish. The five additional payloads are `shadowmountplus`,
+`cheatrunner`, `ps5-backpork`, `pldmgr_v0.5.1` and the trophy launcher; the
+sender limit is 12 MiB and data is still copied through the existing 64 KiB
+staging buffer.
+
+`payloads/PS5 TROPHY UNLOCKER.ELF` is a one-shot launcher built for this
+package. It scans for exactly one running `eboot.bin`, accepts only a valid
+`PPSA#####`, `PPSB#####` or `CUSA#####` Title ID, freezes and revalidates the
+same PID, then injects the non-debug engine supplied in `Trophee unlocker
+beta.zip`. No game, an ambiguous process list, a changed Title ID or an invalid
+embedded ELF all cause a clean abort before the engine runs. The launcher
+forces `mode=all`, so select it only while the intended game is running. Its
+reproducible launcher source and GPL notices are in
+`source/PS5-TROPHY-UNLOCKER/`.
 
 `payloads/kstuff.elf` is the official [EchoStretch Kstuff Lite v1.09 release](https://github.com/EchoStretch/kstuff-lite/releases/tag/v1.09)
 asset, not a locally rebuilt variant. Its expected SHA-256 is
 `ec5212794dc6e44ee8e70fd0549abec6d3dac8c3e03ddbeafd9f869ffe97d4e8`.
-Payload fetches include the UI40 asset revision and `no-store` so GitHub Pages
+Payload fetches include the UI41 asset revision and `no-store` so GitHub Pages
 and the console browser do not silently reuse the previous Kstuff binary.
 
 When the selected firmware file in `offsets/` really finishes loading, the HUD
@@ -69,12 +80,12 @@ page cannot send a raw ELF to the loader without the live parent runtime.
 - Runtime HUD updates and decorative compositing are suspended during race
   windows, then restored after the timing-sensitive section finishes.
 - The runtime icon is a separate 192 px asset to reduce decoded image memory.
-- The ten payload controls live directly in the runtime document and use
+- The eleven payload controls live directly in the runtime document and use
   fixed-height block rows. No iframe or secondary page must be painted after
   the kernel stages.
 - A successful payload session installs a navigation guard so an accidental
   refresh or Back action does not discard the live ROP sender. If the browser
-  forcibly reloads the WebProcess, the success page and all ten payloads are
+  forcibly reloads the WebProcess, the success page and all eleven payloads are
   restored without another kernel exploit, but sending is disabled because
   JavaScript cannot safely reconstruct that lost live state.
 
@@ -82,6 +93,13 @@ These changes do not alter exploit primitives, firmware offsets, race counts,
 timeouts, syscall sequences, kernel-write targets or bundled payloads. A kernel
 exploit can never be made panic-proof; reboot whenever the runtime requests it
 and never retry an armed run in the same boot after kernel state was changed.
+
+The trophy launcher changes local trophy state and has no undo action. Keep the
+console offline and do not sync artificial unlocks to PSN. The uploaded beta
+archive did not contain the trophy engine's C/C++ source, so SpiderKit embeds
+and validates the supplied non-debug binary rather than presenting it as a
+source rebuild. Hardware behavior still depends on the console firmware, the
+active jailbreak, Kstuff and the supplied engine.
 
 ## Hosting
 
