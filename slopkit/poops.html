@@ -207,15 +207,15 @@
   <a class="payloadTile" href="#" data-code="FTP" data-size="188 KiB" data-name="ftpsrv-ps5.elf" data-state="default">FTP // ftpsrv-ps5.elf // 188 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="GDB" data-size="171 KiB" data-name="gdbsrv-ps5.elf" data-state="default">GDB // gdbsrv-ps5.elf // 171 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="LOG" data-size="133 KiB" data-name="klogsrv-ps5.elf" data-state="default">LOG // klogsrv-ps5.elf // 133 KiB // READY</a>
-  <a class="payloadTile" href="#" data-code="KST" data-size="1.5 MiB" data-name="kstuff.elf" data-state="default">KST // kstuff.elf // 1.5 MiB // READY</a>
+  <a class="payloadTile" href="#" data-code="KST" data-size="v1.09 OFFICIAL" data-name="kstuff.elf" data-state="default">KST // kstuff.elf // v1.09 OFFICIAL // READY</a>
   <a class="payloadTile" href="#" data-code="SHL" data-size="964 KiB" data-name="shsrv-ps5.elf" data-state="default">SHL // shsrv-ps5.elf // 964 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="WEB" data-size="1.6 MiB" data-name="websrv-ps5.elf" data-state="default">WEB // websrv-ps5.elf // 1.6 MiB // READY</a>
   <a class="payloadTile" href="#" data-code="SHD" data-size="1.4 MiB" data-name="shadowmountplus.elf" data-state="default">SHD // shadowmountplus.elf // 1.4 MiB // READY</a>
   <a class="payloadTile" href="#" data-code="CHT" data-size="9.1 MiB" data-name="cheatrunner.elf" data-state="default">CHT // cheatrunner.elf // 9.1 MiB // READY</a>
   <a class="payloadTile" href="#" data-code="BPK" data-size="97 KiB" data-name="ps5-backpork.elf" data-state="default">BPK // ps5-backpork.elf // 97 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="PLD" data-size="2.3 MiB" data-name="pldmgr_v0.5.1.elf" data-state="default">PLD // pldmgr_v0.5.1.elf // 2.3 MiB // READY</a>
-  <div id="payloadMessage" aria-live="polite">PAYLOADS READY // TARGET 127.0.0.1:9021</div>
-  <a id="payloadReset" href="?clear=1&amp;v=39">FULL REBOOT DONE? CLEAR SAVED STATE</a>
+  <div id="payloadMessage" aria-live="polite">PAYLOADS READY // FOR GAMES, SEND KSTUFF FIRST AND WAIT FOR ITS NOTIFICATION</div>
+  <a id="payloadReset" href="?clear=1&amp;v=40">FULL REBOOT DONE? CLEAR SAVED STATE</a>
 </div>
 <div id="nav"></div>
 <div id="arm" hidden>Open this page with <b>?go=1</b> to arm it. Nothing runs
@@ -278,7 +278,7 @@ const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
 const PROGRESS_KEY = "slopkit-poops:next";
 const RUNLOG_KEY = "slopkit-poops:last";
 const PAYLOAD_SESSION_KEY = "spiderkit:payload-session";
-const REV = "slopkit-poops-39-spider-protocol-ux";
+const REV = "slopkit-poops-40-official-kstuff-1.09";
 
 function storeGet(k) {
     try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
@@ -659,6 +659,7 @@ let payloadSendBusy = false;
 const PAYLOAD_PORT = 9021;
 const PAYLOAD_BUFFER_SIZE = 0x10000;
 const PAYLOAD_MAX_SIZE = 0xC00000;
+const PAYLOAD_ASSET_REV = "40";
 let payloadSendStore = null;
 let payloadSockaddrStore = null;
 let payloadSocketOptionStore = null;
@@ -697,7 +698,7 @@ function showPayloadMenu(restoredAfterReload) {
         payloadMessageEl.textContent = "KERNEL EXPLOIT SKIPPED // SAVED PAYLOADS RESTORED // LIVE SENDER EXISTS ONLY IN THE ORIGINAL OPEN PAGE";
     } else if (payloadMessageEl) {
         payloadMessageEl.className = "";
-        payloadMessageEl.textContent = "PAYLOADS READY // TARGET 127.0.0.1:9021";
+        payloadMessageEl.textContent = "PAYLOADS READY // FOR GAMES, SEND KSTUFF FIRST AND WAIT FOR ITS NOTIFICATION";
     }
     const tiles = payloadMenuEl.getElementsByClassName("payloadTile");
     for (let i = 0; i < tiles.length; ++i) {
@@ -788,7 +789,8 @@ async function sendPayloadToElfldr(name) {
     if (!payloadIsListed(name))
         throw new Error("payload is not listed in this menu");
 
-    const response = await fetch("../payloads/" + encodeURIComponent(name),
+    const response = await fetch("../payloads/" + encodeURIComponent(name)
+        + "?v=" + PAYLOAD_ASSET_REV,
         { cache: "no-store" });
     if (!response.ok)
         throw new Error("payload fetch failed: HTTP " + response.status);
@@ -908,8 +910,9 @@ async function sendPayloadInPlace(name, tile) {
         setPayloadTileState(tile, "sent");
         if (payloadMessageEl) {
             payloadMessageEl.className = "";
-            payloadMessageEl.textContent = "SENT // " + name + " // "
-                + result.bytes + " BYTES";
+            payloadMessageEl.textContent = name === "kstuff.elf"
+                ? "KSTUFF V1.09 SENT // WAIT FOR THE ON-SCREEN KSTUFF WELCOME BEFORE STARTING A GAME"
+                : "SENT // " + name + " // " + result.bytes + " BYTES";
         }
         flushMark("ELF-SENT", "name=" + clean(result.name) + "-bytes="
             + result.bytes + "-target=" + clean(result.target)

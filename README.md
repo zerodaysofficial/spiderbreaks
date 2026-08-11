@@ -1,4 +1,4 @@
-# SpiderKit — Spider Protocol UI39
+# SpiderKit — Spider Protocol UI40
 
 SpiderKit is a visual redesign of Jordy's `slopkit` host. The exploit chain,
 firmware offsets, kernel stages, loader flow and bundled binaries are retained
@@ -23,7 +23,7 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=39`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=40`
 
 After a successful chain, the runtime exposes its payload menu directly inside
 `slopkit/poops.html`, without navigating or creating a second frame. Selecting
@@ -36,6 +36,12 @@ The success screen switches to the local Spider-Man GIF only after the kernel
 and loader stages finish. The four additional payloads are `shadowmountplus`,
 `cheatrunner`, `ps5-backpork` and `pldmgr_v0.5.1`; the sender limit is 12 MiB
 and data is still copied through the existing 64 KiB staging buffer.
+
+`payloads/kstuff.elf` is the official [EchoStretch Kstuff Lite v1.09 release](https://github.com/EchoStretch/kstuff-lite/releases/tag/v1.09)
+asset, not a locally rebuilt variant. Its expected SHA-256 is
+`ec5212794dc6e44ee8e70fd0549abec6d3dac8c3e03ddbeafd9f869ffe97d4e8`.
+Payload fetches include the UI40 asset revision and `no-store` so GitHub Pages
+and the console browser do not silently reuse the previous Kstuff binary.
 
 When the selected firmware file in `offsets/` really finishes loading, the HUD
 shows its filename and advances the progress bar. Later percentages follow the
