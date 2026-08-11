@@ -137,7 +137,8 @@
   body.loader-ready::before,
   body.loader-ready::after { display:none; }
   body.loader-ready .runtimePanel { display:flex!important; }
-  body.loader-ready #cat { width:88px; height:88px; margin-bottom:8px; }
+  body.loader-ready #cat { width:320px; max-width:84vw; height:180px; margin-bottom:10px; border-radius:14px; background:#080d19; }
+  body.loader-ready #cat img { border-radius:10px; object-fit:cover; }
   body.loader-ready .sub { margin-bottom:11px; }
   body.loader-ready #runtimeHud,
   body.loader-ready #stage,
@@ -181,13 +182,17 @@
 <pre id="early"></pre>
 <pre id="scr"></pre>
 <div id="payloadMenu" aria-label="Selectable ELF payloads">
-  <div class="payloadMenuHead"><strong>ELF LOADER ONLINE // PAYLOADS</strong><span>SELECT WITH THE DIRECTIONAL PAD, THEN PRESS ×</span></div>
+  <div class="payloadMenuHead"><strong id="payloadMenuTitle">ELF LOADER ONLINE // 10 PAYLOADS</strong><span>SELECT WITH THE DIRECTIONAL PAD, THEN PRESS ×</span></div>
   <a class="payloadTile" href="#" data-code="FTP" data-size="188 KiB" data-name="ftpsrv-ps5.elf" data-state="default">FTP // ftpsrv-ps5.elf // 188 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="GDB" data-size="171 KiB" data-name="gdbsrv-ps5.elf" data-state="default">GDB // gdbsrv-ps5.elf // 171 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="LOG" data-size="133 KiB" data-name="klogsrv-ps5.elf" data-state="default">LOG // klogsrv-ps5.elf // 133 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="KST" data-size="1.5 MiB" data-name="kstuff.elf" data-state="default">KST // kstuff.elf // 1.5 MiB // READY</a>
   <a class="payloadTile" href="#" data-code="SHL" data-size="964 KiB" data-name="shsrv-ps5.elf" data-state="default">SHL // shsrv-ps5.elf // 964 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="WEB" data-size="1.6 MiB" data-name="websrv-ps5.elf" data-state="default">WEB // websrv-ps5.elf // 1.6 MiB // READY</a>
+  <a class="payloadTile" href="#" data-code="SHD" data-size="1.4 MiB" data-name="shadowmountplus.elf" data-state="default">SHD // shadowmountplus.elf // 1.4 MiB // READY</a>
+  <a class="payloadTile" href="#" data-code="CHT" data-size="9.1 MiB" data-name="cheatrunner.elf" data-state="default">CHT // cheatrunner.elf // 9.1 MiB // READY</a>
+  <a class="payloadTile" href="#" data-code="BPK" data-size="97 KiB" data-name="ps5-backpork.elf" data-state="default">BPK // ps5-backpork.elf // 97 KiB // READY</a>
+  <a class="payloadTile" href="#" data-code="PLD" data-size="2.3 MiB" data-name="pldmgr_v0.5.1.elf" data-state="default">PLD // pldmgr_v0.5.1.elf // 2.3 MiB // READY</a>
   <div id="payloadMessage" aria-live="polite">PAYLOADS READY // TARGET 127.0.0.1:9021</div>
 </div>
 <div id="nav"></div>
@@ -248,7 +253,8 @@ const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
 
 const PROGRESS_KEY = "slopkit-poops:next";
 const RUNLOG_KEY = "slopkit-poops:last";
-const REV = "slopkit-poops-37-inline-payload-menu";
+const PAYLOAD_SESSION_KEY = "spiderkit:payload-session";
+const REV = "slopkit-poops-38-persistent-payload-session";
 
 function storeGet(k) {
     try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
@@ -259,6 +265,23 @@ function storeJson(k) {
     const raw = storeGet(k);
     if (!raw) return null;
     try { return JSON.parse(raw); } catch { return null; }
+}
+let payloadSessionActive = false;
+let payloadSessionLost = false;
+let payloadHistoryArmed = false;
+
+function rememberPayloadSuccess() {
+    payloadSessionActive = true;
+    storeSet(PAYLOAD_SESSION_KEY, JSON.stringify({
+        v: 1, rev: REV, ts: Date.now(), path: location.pathname
+    }));
+}
+
+function clearPayloadSession() {
+    payloadSessionActive = false;
+    payloadSessionLost = false;
+    payloadHistoryArmed = false;
+    storeDel(PAYLOAD_SESSION_KEY);
 }
 const STALLED_AT = storeGet(PROGRESS_KEY);
 const LAST_RUN = storeJson(RUNLOG_KEY);
@@ -423,6 +446,7 @@ function screenMark(tag, extra) {
     if (tag === "STAGE5-DONE" && /(?:^|-)joinRet=0(?:-|$)/.test(s0) &&
         /(?:^|-)shellcodeRet=0x0+(?:-|$)/.test(s0)) {
         elfldrSpawned = true;
+        rememberPayloadSuccess();
         document.body.classList.add("loader-ready");
         clearFailureBanners();
         setCatResult(true);
@@ -504,28 +528,61 @@ const tallyEl = document.getElementById("tally");
 const summaryEl = document.getElementById("summary");
 const navEl = document.getElementById("nav");
 const payloadMenuEl = document.getElementById("payloadMenu");
+const payloadMenuTitleEl = document.getElementById("payloadMenuTitle");
 const payloadMessageEl = document.getElementById("payloadMessage");
 const rowByKey = new Map();
 let payloadSendBusy = false;
 const PAYLOAD_PORT = 9021;
 const PAYLOAD_BUFFER_SIZE = 0x10000;
-const PAYLOAD_MAX_SIZE = 0x200000;
+const PAYLOAD_MAX_SIZE = 0xC00000;
 let payloadSendStore = null;
 let payloadSockaddrStore = null;
 let payloadSocketOptionStore = null;
 let payloadSendTimeoutStore = null;
 let payloadSenderBlocked = "";
 
-function showPayloadMenu() {
+function showSuccessAnimation() {
+    const image = document.getElementById("catImage");
+    if (!image) return;
+    image.src = "../ui/ultimate-spider-man-yes.gif";
+    image.alt = "Spider-Man success animation";
+}
+
+function showPayloadMenu(restoredAfterReload) {
+    payloadSessionLost = !!restoredAfterReload;
+    payloadSessionActive = true;
+    if (!payloadSessionLost) rememberPayloadSuccess();
     navEl.textContent = "";
     navEl.style.display = "none";
     document.body.classList.add("loader-ready");
+    showSuccessAnimation();
     payloadMenuEl.className = "on";
-    if (payloadMessageEl) {
+    if (payloadMenuTitleEl)
+        payloadMenuTitleEl.textContent = payloadSessionLost
+            ? "JAILBREAK COMPLETED // PAGE RELOADED"
+            : "ELF LOADER ONLINE // 10 PAYLOADS";
+    if (payloadMessageEl && payloadSessionLost) {
+        payloadMessageEl.className = "error";
+        payloadMessageEl.textContent = "PAYLOAD PAGE RESTORED // LIVE SENDER SESSION WAS LOST BY THE RELOAD // REBOOT BEFORE ANOTHER EXPLOIT";
+    } else if (payloadMessageEl) {
         payloadMessageEl.className = "";
         payloadMessageEl.textContent = "PAYLOADS READY // TARGET 127.0.0.1:9021";
     }
     const tiles = payloadMenuEl.getElementsByTagName("a");
+    for (let i = 0; i < tiles.length; ++i) {
+        if (payloadSessionLost) {
+            tiles[i].className = "payloadTile busy";
+            tiles[i].setAttribute("aria-disabled", "true");
+        } else {
+            tiles[i].removeAttribute("aria-disabled");
+        }
+    }
+    if (!payloadHistoryArmed) {
+        try {
+            history.pushState({ spiderKitPayloads: 1 }, "", location.href);
+            payloadHistoryArmed = true;
+        } catch (e) { }
+    }
     if (tiles.length) try { tiles[0].focus(); } catch (e) { }
 }
 
@@ -606,7 +663,7 @@ async function sendPayloadToElfldr(name) {
     if (!bytes.length)
         throw new Error("payload is empty");
     if (bytes.length > PAYLOAD_MAX_SIZE)
-        throw new Error("payload is larger than the 2 MiB limit");
+        throw new Error("payload is larger than the 12 MiB limit");
     if (bytes.length < 4 || bytes[0] !== 0x7f || bytes[1] !== 0x45
         || bytes[2] !== 0x4c || bytes[3] !== 0x46)
         throw new Error("payload does not start with the ELF signature");
@@ -694,6 +751,13 @@ async function sendPayloadToElfldr(name) {
 }
 
 async function sendPayloadInPlace(name, tile) {
+    if (payloadSessionLost) {
+        if (payloadMessageEl) {
+            payloadMessageEl.className = "error";
+            payloadMessageEl.textContent = "CANNOT SEND AFTER A PAGE RELOAD // THE LIVE ROP SENDER NO LONGER EXISTS // REBOOT FIRST";
+        }
+        return;
+    }
     if (payloadSendBusy) return;
     payloadSendBusy = true;
     const tiles = payloadMenuEl.getElementsByTagName("a");
@@ -920,7 +984,20 @@ function unloadBeaconInner(kind) {
         + "-latch=" + (latchState || "unknown"));
 }
 window.addEventListener("pagehide", () => unloadBeacon("pagehide"));
-window.addEventListener("beforeunload", () => unloadBeacon("beforeunload"));
+window.addEventListener("beforeunload", event => {
+    unloadBeacon("beforeunload");
+    if (!payloadSessionActive) return;
+    try {
+        event.preventDefault();
+        event.returnValue = "";
+    } catch (e) { }
+    return "";
+});
+window.addEventListener("popstate", () => {
+    if (!payloadSessionActive) return;
+    payloadHistoryArmed = false;
+    showPayloadMenu(payloadSessionLost);
+});
 
 function lockNav(live) {
     navLive = live;
@@ -1734,6 +1811,7 @@ async function main() {
 async function clearMain() {
     const before = await latch.read();
     const after = await latch.clear();
+    clearPayloadSession();
     stage(before.set
         ? "one-shot latch CLEARED. It was set by: " + (before.detail || "?")
         : "the latch was not set; nothing to clear.", "ok");
@@ -1790,6 +1868,15 @@ function lastRunText() {
     const l = await latch.read();
     flushMark("LATCH-READ", "set=" + (l.set ? 1 : 0)
         + "-detail=" + clean(l.detail || ""));
+
+    const savedPayloadSession = storeJson(PAYLOAD_SESSION_KEY);
+    if (savedPayloadSession && savedPayloadSession.v === 1) {
+        payloadSessionActive = true;
+        showPayloadMenu(true);
+        flushMark("PAYLOAD-PAGE-RESTORED",
+            "live-rop-session-lost-after-reload-reboot-before-send");
+        return;
+    }
 
     // Legacy links may still contain ?auto=1. Automatic latch clearing cannot
     // prove that the console rebooted, so it is always refused once set.

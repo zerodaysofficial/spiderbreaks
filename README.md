@@ -9,9 +9,9 @@ have been redesigned for a clearer controller-first experience.
 
 - User-provided Spider mask icon, optimized locally for the PS5 browser
 - Dark red/blue launch screen with a focused `BRAND NEW JAILBREAK` action
-- Six staged payloads visible but disabled on the initial page
+- Ten staged payloads visible but disabled on the initial page
 - Five-step runtime rail: WebKit, kernel, kernel R/W, root and ELF loader
-- Full-screen `/payloads/` directory with ready, sending, sent and failed states
+- In-page payload directory with ready, sending, sent and failed states
 - Directional controller navigation in the post-exploit payload menu
 - No external fonts, trackers or visual dependencies
 - All interface assets are stored locally
@@ -20,14 +20,19 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=37`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=38`
 
 After a successful chain, the runtime exposes its payload menu directly inside
 `slopkit/poops.html`, without navigating or creating a second frame. Selecting
 one entry sends that ELF to `127.0.0.1:9021`.
 
-The initial page only previews the six payloads in a disabled state. They are
+The initial page only previews the ten payloads in a disabled state. They are
 made selectable only after the runtime confirms that the ELF loader is online.
+
+The success screen switches to the local Spider-Man GIF only after the kernel
+and loader stages finish. The four additional payloads are `shadowmountplus`,
+`cheatrunner`, `ps5-backpork` and `pldmgr_v0.5.1`; the sender limit is 12 MiB
+and data is still copied through the existing 64 KiB staging buffer.
 
 Opening `payloads/` directly is a safe visual preview only. A standalone web
 page cannot send a raw ELF to the loader without the live parent runtime.
@@ -41,9 +46,13 @@ page cannot send a raw ELF to the loader without the live parent runtime.
 - Runtime HUD updates and decorative compositing are suspended during race
   windows, then restored after the timing-sensitive section finishes.
 - The runtime icon is a separate 192 px asset to reduce decoded image memory.
-- The six payload controls live directly in the runtime document and use
+- The ten payload controls live directly in the runtime document and use
   fixed-height block rows. No iframe or secondary page must be painted after
   the kernel stages.
+- A successful payload session installs a navigation guard so an accidental
+  refresh or Back action does not discard the live ROP sender. If the browser
+  forcibly reloads the WebProcess, the success page is restored but sending is
+  disabled because JavaScript cannot safely reconstruct that lost live state.
 
 These changes do not alter exploit primitives, firmware offsets, race counts,
 timeouts, syscall sequences, kernel-write targets or bundled payloads. A kernel
@@ -67,8 +76,9 @@ TheFloW, John Tornblom, Flatz and PS5 R&D Discord.
 Spider interface: zer0day.
 
 The interface is an independent visual redesign and is not affiliated with or
-endorsed by Sony, Marvel or Disney. The included mask icon was supplied for
-this build; verify that you have the necessary rights before public reuse.
+endorsed by Sony, Marvel or Disney. The included mask icon and success GIF were
+supplied for this build; verify that you have the necessary rights before
+public reuse.
 
 ## Important notice
 
