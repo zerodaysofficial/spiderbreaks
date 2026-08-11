@@ -9,7 +9,7 @@ have been redesigned for a clearer controller-first experience.
 
 - User-provided Spider mask icon, optimized locally for the PS5 browser
 - Dark red/blue launch screen with a focused `BRAND NEW JAILBREAK` action
-- Five staged payloads visible but disabled on the initial page
+- Six staged payloads visible but disabled on the initial page
 - Five-step runtime rail: WebKit, kernel, kernel R/W, root and ELF loader
 - Full-screen `/payloads/` directory with ready, sending, sent and failed states
 - Directional controller navigation in a separate, PS5-friendly document
@@ -20,13 +20,13 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=34`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=35`
 
 After a successful chain, the runtime opens `payloads/index.html` inside the
 same live page. The separate directory document keeps the exploit runtime in
 memory while sending one selected ELF at a time to `127.0.0.1:9021`.
 
-The initial page only previews the five payloads in a disabled state. They are
+The initial page only previews the six payloads in a disabled state. They are
 made selectable only after the runtime confirms that the ELF loader is online.
 
 Opening `payloads/` directly is a safe visual preview only. A standalone web
@@ -54,6 +54,8 @@ and never retry an armed run in the same boot after kernel state was changed.
 
 This is a static project. Serve the repository root through HTTP or publish the
 root to GitHub Pages. Do not open the files directly with a `file://` URL.
+The directory page must keep the exact path `payloads/index.html`; a browser
+download renamed to `index(1).html` will not replace the page served by GitHub.
 
 ## Attribution
 

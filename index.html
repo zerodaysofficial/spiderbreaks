@@ -126,20 +126,22 @@
     background:rgba(6,10,20,.68); box-shadow:inset 0 1px rgba(255,255,255,.025);
   }
   .payload-lock-head {
-    display:flex; align-items:center; justify-content:space-between; margin:0 2px 9px;
+    position:relative; display:block; min-height:12px; margin:0 2px 9px;
     color:#78849a; font:800 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em;
   }
-  .payload-lock-head b { color:#ff6a84; font-size:8px; }
-  .payload-lock-list { display:flex; width:100%; gap:6px; }
+  .payload-lock-head b { position:absolute; top:0; right:0; color:#ff6a84; font-size:8px; }
+  .payload-lock-list { display:block; width:100%; }
   .locked-payload {
-    position:relative; min-width:0; height:58px; flex:1 1 0; margin:0; padding:8px 3px 6px;
+    position:relative; display:block!important; width:100%; height:32px; min-height:32px;
+    margin:0 0 4px; padding:0 72px 0 68px;
     overflow:hidden; border:1px solid #2a3449; border-radius:8px; color:#7e8a9f;
-    background:#0b101d; text-align:center; opacity:.7;
+    background:#0b101d; text-align:left; opacity:.7;
     font-family:ui-monospace,Consolas,monospace; pointer-events:none;
     -webkit-appearance:none; appearance:none;
   }
-  .locked-payload strong { display:block; margin:0 0 7px; color:#a8b2c4; font-size:11px; letter-spacing:.06em; }
-  .locked-payload small { display:block; overflow:hidden; font-size:7px; text-overflow:ellipsis; white-space:nowrap; }
+  .locked-payload strong { position:absolute; top:10px; left:10px; display:block; width:50px; color:#a8b2c4; font-size:9px; line-height:1; letter-spacing:.06em; }
+  .locked-payload small { display:block; overflow:hidden; padding-top:10px; font-size:8px; line-height:1; text-overflow:ellipsis; white-space:nowrap; }
+  .locked-payload::before { content:"LOCKED"; position:absolute; top:10px; right:9px; color:#ff6a84; font-size:7px; line-height:1; letter-spacing:.08em; }
   .locked-payload::after {
     content:""; position:absolute; top:0; right:0; bottom:0; left:0;
     background:repeating-linear-gradient(135deg,transparent 0 8px,rgba(255,255,255,.018) 9px 10px);
@@ -185,9 +187,21 @@
     .action { margin: 0 auto; text-align: left; }
     .footer { align-items: flex-start; flex-direction: column; }
   }
-  @media (max-width:480px) {
-    .payload-lock-list { flex-wrap:wrap; }
-    .locked-payload { flex:1 1 30%; }
+  @media (max-height:760px) and (min-width:761px) {
+    .shell { padding-top:18px; padding-bottom:14px; }
+    .hero { padding-top:8px; padding-bottom:8px; }
+    .visual { min-height:340px; }
+    .visual::before { width:300px; height:300px; }
+    .visual::after { width:244px; height:244px; }
+    .mask { width:245px; }
+    h1 { font-size:58px; }
+    .lead { margin-top:14px; margin-bottom:14px; line-height:1.45; }
+    .specs { margin-bottom:10px; }
+    .payload-lock { margin-bottom:11px; padding-top:8px; padding-bottom:5px; }
+    .locked-payload { height:27px; min-height:27px; margin-bottom:3px; }
+    .locked-payload strong,.locked-payload::before { top:8px; }
+    .locked-payload small { padding-top:8px; }
+    .action { min-height:60px; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -207,16 +221,17 @@
       <p class="lead">A controller-first launch interface for the PS5 WebKit chain, kernel stages and local ELF loader.</p>
       <div class="specs" aria-label="Runtime features"><span>FW 9.00—12.00</span><span>ROP CHAIN</span><span>ELF :9021</span></div>
       <section id="payloadLock" class="payload-lock" aria-label="Payloads locked until the ELF loader is online" aria-disabled="true">
-        <div class="payload-lock-head"><span>PAYLOADS // STAGED</span><b id="payloadLockState">LOCKED UNTIL ELF LOADER</b></div>
+        <div class="payload-lock-head"><span>6 PAYLOADS // STAGED</span><b id="payloadLockState">LOCKED UNTIL ELF LOADER</b></div>
         <div class="payload-lock-list">
-          <button class="locked-payload" type="button" disabled><strong>FTP</strong><small>ftpsrv.elf</small></button>
-          <button class="locked-payload" type="button" disabled><strong>GDB</strong><small>gdbsrv.elf</small></button>
-          <button class="locked-payload" type="button" disabled><strong>KLOG</strong><small>klogsrv.elf</small></button>
-          <button class="locked-payload" type="button" disabled><strong>SHELL</strong><small>shsrv.elf</small></button>
-          <button class="locked-payload" type="button" disabled><strong>WEB</strong><small>websrv.elf</small></button>
+          <button class="locked-payload" type="button" data-name="ftpsrv-ps5.elf" disabled><strong>FTP</strong><small>ftpsrv-ps5.elf</small></button>
+          <button class="locked-payload" type="button" data-name="gdbsrv-ps5.elf" disabled><strong>GDB</strong><small>gdbsrv-ps5.elf</small></button>
+          <button class="locked-payload" type="button" data-name="klogsrv-ps5.elf" disabled><strong>KLOG</strong><small>klogsrv-ps5.elf</small></button>
+          <button class="locked-payload" type="button" data-name="kstuff.elf" disabled><strong>KSTUFF</strong><small>kstuff.elf</small></button>
+          <button class="locked-payload" type="button" data-name="shsrv-ps5.elf" disabled><strong>SHELL</strong><small>shsrv-ps5.elf</small></button>
+          <button class="locked-payload" type="button" data-name="websrv-ps5.elf" disabled><strong>WEB</strong><small>websrv-ps5.elf</small></button>
         </div>
       </section>
-      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=34" tabindex="0">
+      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=35" tabindex="0">
         <span class="action-copy"><strong>BRAND NEW JAILBREAK</strong><small>START THE EXPLOIT SEQUENCE</small></span><span class="cross" aria-hidden="true">×</span>
       </a>
       <div id="status" aria-live="polite">PRESS × TO CONTINUE</div>

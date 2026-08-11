@@ -159,6 +159,7 @@
   <a href="#" data-name="ftpsrv-ps5.elf" data-state="default"></a>
   <a href="#" data-name="gdbsrv-ps5.elf" data-state="default"></a>
   <a href="#" data-name="klogsrv-ps5.elf" data-state="default"></a>
+  <a href="#" data-name="kstuff.elf" data-state="default"></a>
   <a href="#" data-name="shsrv-ps5.elf" data-state="default"></a>
   <a href="#" data-name="websrv-ps5.elf" data-state="default"></a>
 </div>
@@ -176,7 +177,7 @@ otherwise.</div>
 </main>
 
 <iframe id="payloadBrowser" title="SpiderKit payload directory"
-  data-src="../payloads/?embedded=1&amp;v=34"></iframe>
+  data-src="../payloads/?embedded=1&amp;v=35"></iframe>
 
 <div id="console" hidden></div>
 
@@ -223,7 +224,7 @@ const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
 
 const PROGRESS_KEY = "slopkit-poops:next";
 const RUNLOG_KEY = "slopkit-poops:last";
-const REV = "slopkit-poops-34-staged-payload-home";
+const REV = "slopkit-poops-35-six-payload-index";
 
 function storeGet(k) {
     try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
