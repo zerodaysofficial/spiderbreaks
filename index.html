@@ -155,7 +155,7 @@
           <button class="locked-payload" type="button" data-name="pldmgr_v0.5.1.elf" disabled><strong>PLDMGR</strong><small>pldmgr_v0.5.1.elf</small></button>
         </div>
       </section>
-      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=41" tabindex="0"><span class="action-copy"><strong id="startTitle">BRAND NEW JAILBREAK</strong><small id="startSub">START THE SPIDER PROTOCOL</small></span><span class="cross" aria-hidden="true">×</span></a>
+      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=44" tabindex="0"><span class="action-copy"><strong id="startTitle">BRAND NEW JAILBREAK</strong><small id="startSub">START THE SPIDER PROTOCOL</small></span><span class="cross" aria-hidden="true">×</span></a>
       <div id="status" aria-live="polite">PRESS × TO CONTINUE // SPIDER-SENSE ONLINE</div>
     </div>
   </section>
@@ -165,6 +165,17 @@
 <script>
 (function () {
     var SESSION_KEY = "spiderkit:payload-session";
+    var pageQuery = new URLSearchParams(location.search);
+    if (pageQuery.get("fresh") === "1") {
+        try { localStorage.removeItem(SESSION_KEY); } catch (e) { }
+        try {
+            sessionStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem("slopkit-poops:latch");
+            sessionStorage.removeItem("slopkit-poops:next");
+            sessionStorage.removeItem("slopkit-poops:last");
+        } catch (e) { }
+        try { history.replaceState(null, "", "index.html?v=44"); } catch (e) { }
+    }
     var start = document.getElementById("start");
     var overlay = document.getElementById("launchOverlay");
     var fill = document.getElementById("launchFill");
@@ -176,7 +187,7 @@
             var raw = localStorage.getItem(SESSION_KEY);
             if (!raw) return null;
             var parsed = JSON.parse(raw);
-            return parsed && parsed.v === 1 ? parsed : null;
+            return parsed && (parsed.v === 1 || parsed.v === 2) ? parsed : null;
         } catch (e) { return null; }
     }
     function setLaunchProgress(value, text) {
@@ -189,11 +200,11 @@
         launching = true;
         overlay.className = "on";
         overlay.setAttribute("aria-hidden", "false");
-        document.getElementById("launchTitle").textContent = resume ? "RESTORING PAYLOAD DECK" : "OPENING EXPLOIT RUNTIME";
-        setLaunchProgress(8, resume ? "READING SAVED JAILBREAK STATE" : "SECURING ROUTE");
-        window.setTimeout(function () { setLaunchProgress(34, resume ? "SKIPPING KERNEL EXPLOIT" : "HANDOFF TO OFFSET SCANNER"); }, 170);
-        window.setTimeout(function () { setLaunchProgress(68, resume ? "OPENING SPIDER ARSENAL" : "STARTING WEBKIT RUNTIME"); }, 360);
-        window.setTimeout(function () { setLaunchProgress(100, resume ? "PAYLOAD DECK READY" : "RUNTIME ONLINE"); }, 570);
+        document.getElementById("launchTitle").textContent = resume ? "VERIFYING JAILBREAK SESSION" : "OPENING EXPLOIT RUNTIME";
+        setLaunchProgress(8, resume ? "READING SAVED BOOT IDENTITY" : "SECURING ROUTE");
+        window.setTimeout(function () { setLaunchProgress(34, resume ? "RESTORING USERLAND SENDER" : "HANDOFF TO OFFSET SCANNER"); }, 170);
+        window.setTimeout(function () { setLaunchProgress(68, resume ? "CHECKING ELF LOADER" : "STARTING WEBKIT RUNTIME"); }, 360);
+        window.setTimeout(function () { setLaunchProgress(100, resume ? "HANDOFF TO LIVE VERIFICATION" : "RUNTIME ONLINE"); }, 570);
         window.setTimeout(function () { location.href = target; }, 760);
     }
     var match = /PlayStation 5\/(\d+\.\d+)/.exec(navigator.userAgent || "");
@@ -217,12 +228,12 @@
     var saved = readSavedSession();
     if (saved) {
         document.body.className = "resume-ready";
-        document.getElementById("modeText").textContent = "JAILBREAK REMEMBERED";
-        document.getElementById("payloadLockState").textContent = "SAVED PAYLOAD DECK";
-        document.getElementById("startTitle").textContent = "RETURN TO PAYLOADS";
-        document.getElementById("startSub").textContent = "KERNEL EXPLOIT WILL NOT RUN AGAIN";
-        document.getElementById("status").textContent = "SAVED JAILBREAK FOUND // RESTORING PAYLOAD DECK";
-        start.href = "slopkit/poops.html?resume=1&payload=1&v=41";
+        document.getElementById("modeText").textContent = "SAVED SESSION // VERIFYING";
+        document.getElementById("payloadLockState").textContent = "BOOT CHECK REQUIRED";
+        document.getElementById("startTitle").textContent = "VERIFY JAILBREAK";
+        document.getElementById("startSub").textContent = "CHECK BOOT MEMORY AND RESTORE PAYLOADS";
+        document.getElementById("status").textContent = "SAVED SESSION FOUND // VERIFYING CONSOLE BOOT";
+        start.href = "slopkit/poops.html?go=1&trigger=netcontrol&resume=1&payload=1&v=44";
         window.setTimeout(function () { launch(start.href, true); }, 650);
     } else {
         try { start.focus(); } catch (e) { }

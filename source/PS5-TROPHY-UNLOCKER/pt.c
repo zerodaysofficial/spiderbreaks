@@ -31,6 +31,7 @@ along with this program; see the file COPYING. If not, see
 
 #include "pt.h"
 
+#define PT_MAX_SINGLE_STEPS 1000000u
 
 static int
 sys_ptrace(int request, pid_t pid, caddr_t addr, int data) {
@@ -74,6 +75,7 @@ pt_attach(pid_t pid) {
   }
 
   if(waitpid(pid, 0, 0) == -1) {
+    (void)sys_ptrace(PT_DETACH, pid, 0, 0);
     return -1;
   }
 
@@ -214,6 +216,8 @@ pt_call(pid_t pid, intptr_t addr, ...) {
   struct reg jmp_reg;
   struct reg bak_reg;
   va_list ap;
+  unsigned int steps = 0;
+  long result = -1;
 
   if(pt_getregs(pid, &bak_reg)) {
     return -1;
@@ -235,22 +239,22 @@ pt_call(pid_t pid, intptr_t addr, ...) {
     return -1;
   }
 
-  // single step until the function returns
+  /* Single-step until the function returns. Always restore the saved
+   * register state on timeout or ptrace failure so a failed helper call does
+   * not leave the suspended game thread pointing inside the callee. */
   while(jmp_reg.r_rsp <= bak_reg.r_rsp) {
-    if(pt_step(pid)) {
-      return -1;
-    }
-    if(pt_getregs(pid, &jmp_reg)) {
-      return -1;
+    if(steps++ >= PT_MAX_SINGLE_STEPS ||
+       pt_step(pid) || pt_getregs(pid, &jmp_reg)) {
+      goto restore;
     }
   }
+  result = jmp_reg.r_rax;
 
-  // restore registers
+restore:
   if(pt_setregs(pid, &bak_reg)) {
     return -1;
   }
-
-  return jmp_reg.r_rax;
+  return result;
 }
 
 
@@ -260,6 +264,8 @@ pt_syscall(pid_t pid, int sysno, ...) {
   struct reg jmp_reg;
   struct reg bak_reg;
   va_list ap;
+  unsigned int steps = 0;
+  long result = -1;
 
   if(!addr) {
     return -1;
@@ -288,22 +294,20 @@ pt_syscall(pid_t pid, int sysno, ...) {
     return -1;
   }
 
-  // single step until the function returns
+  /* Mirror pt_call's fail-safe register restoration for remote syscalls. */
   while(jmp_reg.r_rsp <= bak_reg.r_rsp) {
-    if(pt_step(pid)) {
-      return -1;
-    }
-    if(pt_getregs(pid, &jmp_reg)) {
-      return -1;
+    if(steps++ >= PT_MAX_SINGLE_STEPS ||
+       pt_step(pid) || pt_getregs(pid, &jmp_reg)) {
+      goto restore;
     }
   }
+  result = jmp_reg.r_rax;
 
-  // restore registers
+restore:
   if(pt_setregs(pid, &bak_reg)) {
     return -1;
   }
-
-  return jmp_reg.r_rax;
+  return result;
 }
 
 
@@ -316,25 +320,25 @@ pt_mmap(pid_t pid, intptr_t addr, size_t len, int prot, int flags,
 
 int
 pt_msync(pid_t pid, intptr_t addr, size_t len, int flags) {
-  return pt_syscall(pid, SYS_msync, addr, len, flags);
+  return pt_syscall(pid, SYS_msync, addr, len, flags, 0, 0, 0);
 }
 
 
 int
 pt_munmap(pid_t pid, intptr_t addr, size_t len) {
-  return pt_syscall(pid, SYS_munmap, addr, len);
+  return pt_syscall(pid, SYS_munmap, addr, len, 0, 0, 0, 0);
 }
 
 
 int
 pt_mprotect(pid_t pid, intptr_t addr, size_t len, int prot) {
-  return pt_syscall(pid, SYS_mprotect, addr, len, prot);
+  return pt_syscall(pid, SYS_mprotect, addr, len, prot, 0, 0, 0);
 }
 
 
 int
 pt_socket(pid_t pid, int domain, int type, int protocol) {
-  return (int)pt_syscall(pid, SYS_socket, domain, type, protocol);
+  return (int)pt_syscall(pid, SYS_socket, domain, type, protocol, 0, 0, 0);
 }
 
 
@@ -348,45 +352,45 @@ pt_setsockopt(pid_t pid, int fd, int level, int optname, intptr_t optval,
 
 int
 pt_close(pid_t pid, int fd) {
-  return (int)pt_syscall(pid, SYS_close, fd);
+  return (int)pt_syscall(pid, SYS_close, fd, 0, 0, 0, 0, 0);
 }
 
 
 int
 pt_bind(pid_t pid, int sockfd, intptr_t addr, uint32_t addrlen) {
-  return (int)pt_syscall(pid, SYS_bind, sockfd, addr, addrlen);
+  return (int)pt_syscall(pid, SYS_bind, sockfd, addr, addrlen, 0, 0, 0);
 }
 
 
 ssize_t
 pt_recvmsg(pid_t pid, int fd, intptr_t msg, int flags) {
-  return (int)pt_syscall(pid, SYS_recvmsg, fd, msg, flags);
+  return (int)pt_syscall(pid, SYS_recvmsg, fd, msg, flags, 0, 0, 0);
 }
 
 
 int
 pt_dup2(pid_t pid, int oldfd, int newfd) {
-  return (int)pt_syscall(pid, SYS_dup2, oldfd, newfd);
+  return (int)pt_syscall(pid, SYS_dup2, oldfd, newfd, 0, 0, 0, 0);
 }
 
 
 int
 pt_rdup(pid_t pid, pid_t other_pid, int fd) {
-  return (int)pt_syscall(pid, 0x25b, other_pid, fd);
+  return (int)pt_syscall(pid, 0x25b, other_pid, fd, 0, 0, 0, 0);
 }
 
 
 int
 pt_pipe(pid_t pid, intptr_t pipefd) {
   intptr_t faddr = pt_resolve(pid, "-Jp7F+pXxNg");
-  return (int)pt_call(pid, faddr, pipefd);
+  return (int)pt_call(pid, faddr, pipefd, 0, 0, 0, 0, 0);
 }
 
 
 int
 pt_errno(pid_t pid) {
   intptr_t faddr = pt_resolve(pid, "9BcDykPmo1I");
-  intptr_t addr = pt_call(pid, faddr);
+  intptr_t addr = pt_call(pid, faddr, 0, 0, 0, 0, 0, 0);
   return pt_getint(pid, addr);
 }
 
@@ -395,5 +399,5 @@ intptr_t
 pt_sceKernelGetProcParam(pid_t pid) {
   intptr_t faddr = pt_resolve(pid, "959qrazPIrg");
 
-  return pt_call(pid, faddr);
+  return pt_call(pid, faddr, 0, 0, 0, 0, 0, 0);
 }
