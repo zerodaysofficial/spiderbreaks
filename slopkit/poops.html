@@ -98,6 +98,14 @@
   .phase.done { color:#a7b4ca; border-color:#4366aa; }
   .phase.active { color:#fff; border-color:var(--red); text-shadow:0 0 12px rgba(255,23,75,.5); }
   .phase.failed { color:#ff8ba0; border-color:#ff3157; }
+  #offsetProgress { margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+  .offsetMeta { position:relative; display:block; min-height:12px; margin-bottom:8px; color:#77849b; font:800 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.08em; }
+  #offsetBundle { color:#b8c5da; }
+  #exploitProgressValue { position:absolute; top:0; right:0; color:#fff; }
+  .offsetTrack { height:12px; padding:3px; overflow:hidden; border:1px solid #303d58; border-radius:99px; background:#050812; }
+  #exploitProgressFill { display:block; width:2%; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--red),var(--red2),var(--blue)); box-shadow:0 0 17px rgba(255,23,75,.52); transition:width .25s ease; }
+  #exploitProgressLabel { display:block; margin-top:8px; overflow:hidden; color:#7f8ba1; font:800 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.07em; text-overflow:ellipsis; white-space:nowrap; }
+  body.exploit-running #exploitProgressFill { transition-duration:.05s; }
   #stage { width:100%; min-height:44px; margin:0 0 10px; padding:12px 15px; overflow:hidden; text-align:center; text-overflow:ellipsis; white-space:nowrap; border:1px solid var(--line); border-radius:12px; color:#bdc7da; background:rgba(7,10,20,.78); font-size:12px; letter-spacing:.03em; }
   #stage.ok { color:#baffdd; border-color:rgba(69,226,154,.4); background:rgba(14,75,51,.2); }
   #stage.bad { color:#ff9bad; border-color:rgba(255,23,75,.48); background:rgba(105,8,31,.24); }
@@ -116,9 +124,11 @@
     background:rgba(6,10,20,.9); box-shadow:0 22px 60px rgba(0,0,0,.34);
   }
   #payloadMenu.on { display:block!important; }
-  .payloadMenuHead { display:block; margin:0 2px 12px; padding:0 0 11px; border-bottom:1px solid #2a354d; }
+  .payloadMenuHead { position:relative; display:block; margin:0 2px 12px; padding:0 120px 11px 0; border-bottom:1px solid #2a354d; }
   .payloadMenuHead strong { display:block; color:#8df0bd; font-size:11px; letter-spacing:.12em; }
   .payloadMenuHead span { display:block; margin-top:5px; color:#77839a; font-size:8px; letter-spacing:.08em; }
+  #payloadSessionBadge { position:absolute; top:2px; right:0; padding:7px 8px; border:1px solid rgba(69,226,154,.4); border-radius:99px; color:#9df0c7; background:rgba(12,53,38,.7); font:900 7px/1 ui-monospace,Consolas,monospace; letter-spacing:.08em; }
+  #payloadSessionBadge.restored { color:#ffc277; border-color:rgba(255,170,74,.42); background:rgba(65,38,10,.72); }
   #payloadMenu .payloadTile {
     display:block!important; visibility:visible!important; width:100%; height:52px;
     min-height:52px; margin:0 0 7px; padding:0 13px; overflow:hidden;
@@ -127,12 +137,20 @@
     font:800 11px/52px ui-monospace,Consolas,monospace;
   }
   #payloadMenu .payloadTile:focus { outline:3px solid #fff; outline-offset:1px; border-color:#fff; color:#fff; background:#451124; }
+  #payloadMenu .payloadTile:hover { border-color:#5c6f97; }
   #payloadMenu .payloadTile.busy { opacity:.35; }
+  #payloadMenu .payloadTile.restoredTile { opacity:1; border-color:#4b4236; color:#c8bdad; background:#15120f; }
   #payloadMenu .payloadTile[data-state="sending"] { color:#b6d2ff; border-color:#397cf1; background:#101f3f; }
   #payloadMenu .payloadTile[data-state="sent"] { color:#a2f0c7; border-color:#2d8a62; background:#0d281f; }
   #payloadMenu .payloadTile[data-state="failed"] { color:#ff9caf; border-color:#e83258; background:#32101a; }
   #payloadMessage { min-height:34px; margin:12px 0 0; padding:9px 11px; color:#8f9bb1; border:1px solid #252f45; border-radius:8px; background:#070b15; font-size:9px; letter-spacing:.06em; }
   #payloadMessage.error { color:#ff9caf; border-color:#7d263b; }
+  #payloadReset { display:none; margin:9px 0 0; padding:11px 12px; border:1px solid #6a4b2b; border-radius:8px; color:#ffc985; background:#20160b; text-align:center; text-decoration:none; font:900 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.08em; }
+  #payloadReset.on { display:block; }
+  #payloadReset:focus { outline:3px solid #fff; outline-offset:1px; }
+  .runtimeCredits { width:100%; margin:3px auto 0; padding:11px 3px 0; display:flex; align-items:flex-start; flex-direction:column; gap:5px; border-top:1px solid var(--line); color:#657188; font:800 8px/1.4 ui-monospace,Consolas,monospace; letter-spacing:.07em; }
+  .runtimeCredits strong { color:#aab5ca; }
+  .runtimeCredits .zero { color:var(--red2); }
   body.loader-ready { justify-content:flex-start; overflow-y:auto; min-height:100vh; padding-top:68px; }
   body.loader-ready::before,
   body.loader-ready::after { display:none; }
@@ -144,6 +162,7 @@
   body.loader-ready #stage,
   body.loader-ready #scr,
   body.loader-ready #failureMessage { display:none!important; }
+  body.loader-ready .runtimeCredits { max-width:680px; }
   body.loader-ready #dt { display:none; }
   #dt { position:fixed; right:20px; bottom:18px; z-index:9; padding:8px 10px; color:#566177; background:rgba(7,10,19,.8); border:1px solid var(--line); border-radius:8px; font:700 9px/1 ui-monospace,Consolas,monospace; }
   #dt:focus { outline:2px solid #fff; }
@@ -152,12 +171,13 @@
     .runtimeBrand { left:16px; right:16px; }
     #cat { width:138px; height:155px; }
     #phaseRail { gap:4px; } .phase strong { font-size:7px; } .phase span { display:none; }
+    .runtimeCredits { align-items:flex-start; }
   }
   @media(prefers-reduced-motion:reduce) { * { transition:none!important; } }
 </style>
 </head>
 <body class="quiet">
-<div class="runtimeBrand"><strong>SPIDER<b>//</b>KIT</strong><span>PS5 EXPLOIT RUNTIME</span></div>
+<div class="runtimeBrand"><strong>SPIDER<b>//</b>KIT</strong><span>SPIDER PROTOCOL // LIVE RUNTIME</span></div>
 <div id="failureMessage">CHAIN BROKEN // REBOOT REQUIRED</div>
 <main class="runtimePanel">
 <div id="cat"><img id="catImage" src="../ui/spider-icon-runtime.png" alt="SpiderKit runtime mask"></div>
@@ -172,6 +192,7 @@
     <div class="phase"><strong>ROOT</strong><span>04 / ESCAPE</span></div>
     <div class="phase"><strong>ELF LOADER</strong><span>05 / :9021</span></div>
   </div>
+  <div id="offsetProgress"><div class="offsetMeta"><span>OFFSET BUNDLE // <b id="offsetBundle">DETECTING FIRMWARE</b></span><strong id="exploitProgressValue">02%</strong></div><div class="offsetTrack"><i id="exploitProgressFill"></i></div><span id="exploitProgressLabel">BOOTSTRAPPING SPIDER PROTOCOL</span></div>
 </section>
 <div id="reboot"></div>
 <div id="verdict"></div>
@@ -182,7 +203,7 @@
 <pre id="early"></pre>
 <pre id="scr"></pre>
 <div id="payloadMenu" aria-label="Selectable ELF payloads">
-  <div class="payloadMenuHead"><strong id="payloadMenuTitle">ELF LOADER ONLINE // 10 PAYLOADS</strong><span>SELECT WITH THE DIRECTIONAL PAD, THEN PRESS ×</span></div>
+  <div class="payloadMenuHead"><strong id="payloadMenuTitle">ELF LOADER ONLINE // 10 PAYLOADS</strong><span>SELECT WITH THE DIRECTIONAL PAD, THEN PRESS ×</span><b id="payloadSessionBadge">LIVE SENDER</b></div>
   <a class="payloadTile" href="#" data-code="FTP" data-size="188 KiB" data-name="ftpsrv-ps5.elf" data-state="default">FTP // ftpsrv-ps5.elf // 188 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="GDB" data-size="171 KiB" data-name="gdbsrv-ps5.elf" data-state="default">GDB // gdbsrv-ps5.elf // 171 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="LOG" data-size="133 KiB" data-name="klogsrv-ps5.elf" data-state="default">LOG // klogsrv-ps5.elf // 133 KiB // READY</a>
@@ -194,6 +215,7 @@
   <a class="payloadTile" href="#" data-code="BPK" data-size="97 KiB" data-name="ps5-backpork.elf" data-state="default">BPK // ps5-backpork.elf // 97 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="PLD" data-size="2.3 MiB" data-name="pldmgr_v0.5.1.elf" data-state="default">PLD // pldmgr_v0.5.1.elf // 2.3 MiB // READY</a>
   <div id="payloadMessage" aria-live="polite">PAYLOADS READY // TARGET 127.0.0.1:9021</div>
+  <a id="payloadReset" href="?clear=1&amp;v=39">FULL REBOOT DONE? CLEAR SAVED STATE</a>
 </div>
 <div id="nav"></div>
 <div id="arm" hidden>Open this page with <b>?go=1</b> to arm it. Nothing runs
@@ -206,6 +228,7 @@ otherwise.</div>
 </div>
 <div id="tally"></div>
 <div id="summary"></div>
+<footer class="runtimeCredits"><span>EXPLOIT RESEARCH // <strong>SONIC ISO</strong> + <strong>JORDY</strong></span><span>SPIDER EXPERIENCE // <strong class="zero">zer0day</strong></span></footer>
 </main>
 
 <div id="console" hidden></div>
@@ -243,6 +266,7 @@ async function loadPoopsModules() {
 const Q = new URLSearchParams(location.search);
 const ARMED = Q.get("go") === "1";
 const CLEARLATCH = Q.get("clear") === "1";
+const RESUME = Q.get("resume") === "1";
 
 const AUTOCLEAR = Q.get("auto") === "1";
 const FROM = Q.get("from") || "";
@@ -254,17 +278,31 @@ const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
 const PROGRESS_KEY = "slopkit-poops:next";
 const RUNLOG_KEY = "slopkit-poops:last";
 const PAYLOAD_SESSION_KEY = "spiderkit:payload-session";
-const REV = "slopkit-poops-38-persistent-payload-session";
+const REV = "slopkit-poops-39-spider-protocol-ux";
 
 function storeGet(k) {
     try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
 }
 function storeSet(k, v) { try { sessionStorage.setItem(k, v); } catch { } }
 function storeDel(k) { try { sessionStorage.removeItem(k); } catch { } }
+function persistentGet(k) {
+    try { return localStorage.getItem(k) || ""; } catch { return ""; }
+}
+function persistentSet(k, v) { try { localStorage.setItem(k, v); } catch { } }
+function persistentDel(k) { try { localStorage.removeItem(k); } catch { } }
 function storeJson(k) {
     const raw = storeGet(k);
     if (!raw) return null;
     try { return JSON.parse(raw); } catch { return null; }
+}
+function persistentJson(k) {
+    const raw = persistentGet(k);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
+}
+function savedPayloadSession() {
+    return storeJson(PAYLOAD_SESSION_KEY)
+        || persistentJson(PAYLOAD_SESSION_KEY);
 }
 let payloadSessionActive = false;
 let payloadSessionLost = false;
@@ -272,9 +310,11 @@ let payloadHistoryArmed = false;
 
 function rememberPayloadSuccess() {
     payloadSessionActive = true;
-    storeSet(PAYLOAD_SESSION_KEY, JSON.stringify({
+    const record = JSON.stringify({
         v: 1, rev: REV, ts: Date.now(), path: location.pathname
-    }));
+    });
+    storeSet(PAYLOAD_SESSION_KEY, record);
+    persistentSet(PAYLOAD_SESSION_KEY, record);
 }
 
 function clearPayloadSession() {
@@ -282,6 +322,7 @@ function clearPayloadSession() {
     payloadSessionLost = false;
     payloadHistoryArmed = false;
     storeDel(PAYLOAD_SESSION_KEY);
+    persistentDel(PAYLOAD_SESSION_KEY);
 }
 const STALLED_AT = storeGet(PROGRESS_KEY);
 const LAST_RUN = storeJson(RUNLOG_KEY);
@@ -357,6 +398,7 @@ function setRaceMode(on) {
     if (was && !raceMode) {
         if (pendingHudTag) {
             updateHudFromTag(pendingHudTag, pendingHudDetail);
+            updateExploitProgressFromTag(pendingHudTag, pendingHudDetail);
             pendingHudTag = "";
             pendingHudDetail = "";
         }
@@ -384,6 +426,69 @@ const HUD_DEFER_MARKS = /^(LATCH-|OFFSETS-|WEBKIT-|PRIMITIVE-|PREP-|MODULE-BASES
 
 const phaseLabelEl = document.getElementById("phaseLabel");
 const phaseEls = document.getElementById("phaseRail").getElementsByClassName("phase");
+const offsetBundleEl = document.getElementById("offsetBundle");
+const exploitProgressValueEl = document.getElementById("exploitProgressValue");
+const exploitProgressFillEl = document.getElementById("exploitProgressFill");
+const exploitProgressLabelEl = document.getElementById("exploitProgressLabel");
+let exploitProgressValue = 2;
+
+function setExploitProgress(value, label, failed) {
+    let next = Math.max(2, Math.min(100, value | 0));
+    if (!failed && next < exploitProgressValue) next = exploitProgressValue;
+    exploitProgressValue = next;
+    if (exploitProgressFillEl) {
+        exploitProgressFillEl.style.width = next + "%";
+        exploitProgressFillEl.style.background = failed
+            ? "#ff3157"
+            : "linear-gradient(90deg,var(--red),var(--red2),var(--blue))";
+    }
+    if (exploitProgressValueEl)
+        exploitProgressValueEl.textContent = (next < 10 ? "0" : "") + next + "%";
+    if (exploitProgressLabelEl && label)
+        exploitProgressLabelEl.textContent = label;
+}
+
+function updateExploitProgressFromTag(tag, detail) {
+    let value = 0;
+    let label = "";
+    if (/^LATCH-/.test(tag)) {
+        value = 5; label = "SAFETY LATCH VERIFIED";
+    } else if (/^OFFSETS-/.test(tag)) {
+        value = 14; label = "FIRMWARE OFFSET MAP VERIFIED";
+    } else if (/^WORKER-PROBE/.test(tag)) {
+        value = 18; label = "ROP WORKER PROBE COMPLETE";
+    } else if (/^PRIMITIVE-(HISTORY|MEMORY|REUSED)/.test(tag)) {
+        value = 26; label = "WEBKIT MEMORY PRIMITIVE // PREPARING";
+    } else if (/^PRIMITIVE-UP/.test(tag)) {
+        value = 34; label = "WEBKIT MEMORY PRIMITIVE // ONLINE";
+    } else if (/^PREP-ENTER/.test(tag)) {
+        value = 38; label = "RESOLVING MODULE BASES";
+    } else if (/^(PREP-OK|POST-PREP|WEBKIT-|MODULE-BASES|BASE)/.test(tag)) {
+        value = 46; label = "WEBKIT MODULE OFFSETS RESOLVED";
+    } else if (/^(POOPS-MODULES|STAGE0-)/.test(tag)) {
+        value = 52; label = "KERNEL STAGE 0 // GROOMING";
+    } else if (/^STAGE1-/.test(tag)) {
+        value = 61; label = "KERNEL STAGE 1 // UAF SIGNAL";
+    } else if (/^(STAGE2-|TRIGGER-|SOCKETS|SPAWN|WAKEGATE)/.test(tag)) {
+        value = 70; label = "KERNEL STAGE 2 // RECLAIM";
+    } else if (/^(STAGE3-|ALIASES-REPAIRED|PIPE2|IOV-|UIO-)/.test(tag)) {
+        value = 79; label = "KERNEL R/W // PIPE PRIMITIVE";
+    } else if (/^(STAGE4-|ALLPROC-CHECK|CRFREE)/.test(tag)) {
+        value = 89; label = "ROOT // SANDBOX ESCAPE";
+    } else if (/^STAGE5-/.test(tag)) {
+        const loaderReady = tag === "STAGE5-DONE"
+            && /(?:^|-)joinRet=0(?:-|$)/.test(detail || "")
+            && /(?:^|-)shellcodeRet=0x0+(?:-|$)/.test(detail || "");
+        value = loaderReady ? 100 : 96;
+        label = loaderReady
+            ? "ELF LOADER ONLINE // PAYLOAD DECK UNLOCKED"
+            : "INSTALLING ELF LOADER // PORT 9021";
+    } else if (/^ELF-/.test(tag)) {
+        value = 100; label = "ELF LOADER ONLINE // PAYLOAD CHANNEL ACTIVE";
+    }
+    if (value) setExploitProgress(value, label, false);
+}
+
 function setHudPhase(index, label, failed) {
     const phase = Math.max(1, Math.min(5, index || 1));
     for (let i = 0; i < phaseEls.length; ++i) {
@@ -398,6 +503,8 @@ function failCurrentHud(label) {
     for (let i = 0; i < phaseEls.length; ++i)
         if (/\bactive\b/.test(phaseEls[i].className)) phase = i + 1;
     setHudPhase(phase, label, true);
+    setExploitProgress(exploitProgressValue,
+        label || "CHAIN FAILED // CHECK RUNTIME LOG", true);
 }
 function updateHudFromTag(tag, detail) {
     let phase = 0;
@@ -427,6 +534,7 @@ function screenMark(tag, extra) {
         }
     } else {
         updateHudFromTag(tag, s0);
+        updateExploitProgressFromTag(tag, s0);
     }
     let line;
     if (tag === "TEST") {
@@ -451,6 +559,8 @@ function screenMark(tag, extra) {
         clearFailureBanners();
         setCatResult(true);
         setHudPhase(5, "ELF LOADER ONLINE // PORT 9021", false);
+        setExploitProgress(100,
+            "ELF LOADER ONLINE // PAYLOAD DECK UNLOCKED", false);
         showVerdict(false, "ELF LOADER READY");
         stage("ELF LOADER READY", "ok");
     }
@@ -458,6 +568,18 @@ function screenMark(tag, extra) {
     screenLine(line);
     catState(tag, s0);
 }
+
+window.offsetsReady.then(src => {
+    const parts = String(src || "").split("?")[0].split("/");
+    const bundle = parts[parts.length - 1] || "FIRMWARE MAP";
+    if (offsetBundleEl) offsetBundleEl.textContent = bundle.toUpperCase();
+    setExploitProgress(14, "OFFSET MAP VERIFIED // " + bundle.toUpperCase(), false);
+}).catch(error => {
+    if (offsetBundleEl) offsetBundleEl.textContent = "OFFSET MAP FAILED";
+    setExploitProgress(exploitProgressValue,
+        "OFFSET LOAD FAILED // " + clean(error && error.message ? error.message : error),
+        true);
+});
 
 function catState(tag, extra) {
     try {
@@ -529,7 +651,9 @@ const summaryEl = document.getElementById("summary");
 const navEl = document.getElementById("nav");
 const payloadMenuEl = document.getElementById("payloadMenu");
 const payloadMenuTitleEl = document.getElementById("payloadMenuTitle");
+const payloadSessionBadgeEl = document.getElementById("payloadSessionBadge");
 const payloadMessageEl = document.getElementById("payloadMessage");
+const payloadResetEl = document.getElementById("payloadReset");
 const rowByKey = new Map();
 let payloadSendBusy = false;
 const PAYLOAD_PORT = 9021;
@@ -556,23 +680,31 @@ function showPayloadMenu(restoredAfterReload) {
     navEl.style.display = "none";
     document.body.classList.add("loader-ready");
     showSuccessAnimation();
-    payloadMenuEl.className = "on";
+    payloadMenuEl.className = payloadSessionLost ? "on restored" : "on";
     if (payloadMenuTitleEl)
         payloadMenuTitleEl.textContent = payloadSessionLost
-            ? "JAILBREAK COMPLETED // PAGE RELOADED"
+            ? "JAILBREAK SAVED // PAYLOAD DECK"
             : "ELF LOADER ONLINE // 10 PAYLOADS";
+    if (payloadSessionBadgeEl) {
+        payloadSessionBadgeEl.className = payloadSessionLost ? "restored" : "";
+        payloadSessionBadgeEl.textContent = payloadSessionLost
+            ? "RESTORED VIEW" : "LIVE SENDER";
+    }
+    if (payloadResetEl)
+        payloadResetEl.className = payloadSessionLost ? "on" : "";
     if (payloadMessageEl && payloadSessionLost) {
         payloadMessageEl.className = "error";
-        payloadMessageEl.textContent = "PAYLOAD PAGE RESTORED // LIVE SENDER SESSION WAS LOST BY THE RELOAD // REBOOT BEFORE ANOTHER EXPLOIT";
+        payloadMessageEl.textContent = "KERNEL EXPLOIT SKIPPED // SAVED PAYLOADS RESTORED // LIVE SENDER EXISTS ONLY IN THE ORIGINAL OPEN PAGE";
     } else if (payloadMessageEl) {
         payloadMessageEl.className = "";
         payloadMessageEl.textContent = "PAYLOADS READY // TARGET 127.0.0.1:9021";
     }
-    const tiles = payloadMenuEl.getElementsByTagName("a");
+    const tiles = payloadMenuEl.getElementsByClassName("payloadTile");
     for (let i = 0; i < tiles.length; ++i) {
         if (payloadSessionLost) {
-            tiles[i].className = "payloadTile busy";
+            tiles[i].className = "payloadTile restoredTile";
             tiles[i].setAttribute("aria-disabled", "true");
+            setPayloadTileState(tiles[i], "restored");
         } else {
             tiles[i].removeAttribute("aria-disabled");
         }
@@ -587,7 +719,8 @@ function showPayloadMenu(restoredAfterReload) {
 }
 
 function renderPayloadTile(tile, state) {
-    const labels = { "default":"READY", "sending":"SENDING", "sent":"SENT", "failed":"FAILED" };
+    const labels = { "default":"READY", "sending":"SENDING", "sent":"SENT",
+        "failed":"FAILED", "restored":"SAVED / VIEW ONLY" };
     tile.textContent = tile.getAttribute("data-code") + " // "
         + tile.getAttribute("data-name") + " // "
         + tile.getAttribute("data-size") + " // "
@@ -601,7 +734,7 @@ function setPayloadTileState(tile, state) {
 
 function payloadIsListed(name) {
     if (!/^[A-Za-z0-9._-]+\.elf$/.test(name)) return false;
-    const tiles = payloadMenuEl.getElementsByTagName("a");
+    const tiles = payloadMenuEl.getElementsByClassName("payloadTile");
     for (let i = 0; i < tiles.length; ++i)
         if (tiles[i].getAttribute("data-name") === name) return true;
     return false;
@@ -760,7 +893,7 @@ async function sendPayloadInPlace(name, tile) {
     }
     if (payloadSendBusy) return;
     payloadSendBusy = true;
-    const tiles = payloadMenuEl.getElementsByTagName("a");
+    const tiles = payloadMenuEl.getElementsByClassName("payloadTile");
     for (let i = 0; i < tiles.length; ++i)
         tiles[i].className = "payloadTile busy";
     tile.className = "payloadTile";
@@ -816,7 +949,7 @@ async function sendPayloadInPlace(name, tile) {
 }
 
 {
-    const tiles = payloadMenuEl.getElementsByTagName("a");
+    const tiles = payloadMenuEl.getElementsByClassName("payloadTile");
     for (let i = 0; i < tiles.length; ++i) {
         const tile = tiles[i];
         tile.onclick = function (e) {
@@ -824,7 +957,20 @@ async function sendPayloadInPlace(name, tile) {
             sendPayloadInPlace(tile.getAttribute("data-name"), tile);
             return false;
         };
+        tile.onfocus = function () {
+            if (!payloadMessageEl || payloadSendBusy || payloadSessionLost) return;
+            payloadMessageEl.className = "";
+            payloadMessageEl.textContent = "SELECTED // "
+                + tile.getAttribute("data-name") + " // PRESS × TO SEND";
+        };
     }
+}
+
+if (payloadResetEl) {
+    payloadResetEl.onclick = function () {
+        payloadSessionActive = false;
+        return true;
+    };
 }
 
 function stage(text, cls) {
@@ -1869,12 +2015,13 @@ function lastRunText() {
     flushMark("LATCH-READ", "set=" + (l.set ? 1 : 0)
         + "-detail=" + clean(l.detail || ""));
 
-    const savedPayloadSession = storeJson(PAYLOAD_SESSION_KEY);
-    if (savedPayloadSession && savedPayloadSession.v === 1) {
+    const savedSession = savedPayloadSession();
+    if (savedSession && savedSession.v === 1) {
         payloadSessionActive = true;
         showPayloadMenu(true);
         flushMark("PAYLOAD-PAGE-RESTORED",
-            "live-rop-session-lost-after-reload-reboot-before-send");
+            "kernel-exploit-skipped-live-rop-session-not-in-new-document"
+            + "-resume=" + (RESUME ? 1 : 0));
         return;
     }
 

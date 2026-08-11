@@ -1,4 +1,4 @@
-# SpiderKit — PS5 WebKit UI Edition
+# SpiderKit — Spider Protocol UI39
 
 SpiderKit is a visual redesign of Jordy's `slopkit` host. The exploit chain,
 firmware offsets, kernel stages, loader flow and bundled binaries are retained
@@ -8,9 +8,12 @@ have been redesigned for a clearer controller-first experience.
 ## Visual changes
 
 - User-provided Spider mask icon, optimized locally for the PS5 browser
-- Dark red/blue launch screen with a focused `BRAND NEW JAILBREAK` action
+- Fully interactive Spider-Man-inspired red/blue launch experience
+- Clickable mask with a Spider-Sense pulse and controller-first focus states
+- Focused `BRAND NEW JAILBREAK` action and animated runtime handoff
 - Ten staged payloads visible but disabled on the initial page
 - Five-step runtime rail: WebKit, kernel, kernel R/W, root and ELF loader
+- Runtime progress bar driven by the real firmware-offset load and exploit marks
 - In-page payload directory with ready, sending, sent and failed states
 - Directional controller navigation in the post-exploit payload menu
 - No external fonts, trackers or visual dependencies
@@ -20,7 +23,7 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=38`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=39`
 
 After a successful chain, the runtime exposes its payload menu directly inside
 `slopkit/poops.html`, without navigating or creating a second frame. Selecting
@@ -33,6 +36,20 @@ The success screen switches to the local Spider-Man GIF only after the kernel
 and loader stages finish. The four additional payloads are `shadowmountplus`,
 `cheatrunner`, `ps5-backpork` and `pldmgr_v0.5.1`; the sender limit is 12 MiB
 and data is still copied through the existing 64 KiB staging buffer.
+
+When the selected firmware file in `offsets/` really finishes loading, the HUD
+shows its filename and advances the progress bar. Later percentages follow the
+existing runtime markers for the WebKit primitive, kernel stages, kernel R/W,
+root escape and confirmed ELF-loader completion; they are not a timer.
+
+After confirmed loader success, a small success record is written to both
+session storage and persistent local storage. Reopening the site therefore
+goes directly to the saved payload deck and does not rerun the kernel exploit.
+The original open runtime remains the only page with a live ROP sender. A truly
+new or reloaded document can restore the payload list and success screen, but
+cannot reconstruct that live JavaScript/ROP object safely, so sending is
+disabled there. After a full console reboot, use `FULL REBOOT DONE? CLEAR SAVED
+STATE` before starting a new jailbreak.
 
 Opening `payloads/` directly is a safe visual preview only. A standalone web
 page cannot send a raw ELF to the loader without the live parent runtime.
@@ -51,8 +68,9 @@ page cannot send a raw ELF to the loader without the live parent runtime.
   the kernel stages.
 - A successful payload session installs a navigation guard so an accidental
   refresh or Back action does not discard the live ROP sender. If the browser
-  forcibly reloads the WebProcess, the success page is restored but sending is
-  disabled because JavaScript cannot safely reconstruct that lost live state.
+  forcibly reloads the WebProcess, the success page and all ten payloads are
+  restored without another kernel exploit, but sending is disabled because
+  JavaScript cannot safely reconstruct that lost live state.
 
 These changes do not alter exploit primitives, firmware offsets, race counts,
 timeouts, syscall sequences, kernel-write targets or bundled payloads. A kernel
@@ -67,6 +85,8 @@ The directory page must keep the exact path `payloads/index.html`; a browser
 download renamed to `index(1).html` will not replace the page served by GitHub.
 
 ## Attribution
+
+Exploit research credits shown in the interface: Sonic Iso and Jordy.
 
 Original exploit project: Jordy / `jordyidk/slopkit`.
 

@@ -49,6 +49,10 @@
   }
   #message.error { color:#ff9caf; border-color:#7d263b; }
   #system { margin:9px 2px 0; color:#59657c; font-size:8px; letter-spacing:.06em; }
+  #credits { margin:12px 2px 0; padding-top:10px; border-top:1px solid #252f45; color:#657188; font-size:8px; font-weight:bold; letter-spacing:.07em; }
+  #credits span { display:block; margin-top:4px; }
+  #credits strong { color:#aab5ca; }
+  #credits .zero { color:#ff5777; }
   @media(max-width:700px) {
     body { padding:12px 10px 24px; }
     #folder { width:96%; }
@@ -90,8 +94,9 @@
     <button class="file" type="button" data-code="PLD" data-size="2.3 MiB" data-name="pldmgr_v0.5.1.elf" data-state="default">PLD // pldmgr_v0.5.1.elf // 2.3 MiB // READY</button>
   </section>
 
-  <div id="message" aria-live="polite">STANDALONE DIRECTORY PREVIEW // UI 38</div>
+  <div id="message" aria-live="polite">STANDALONE DIRECTORY PREVIEW // UI 39</div>
   <div id="system">SYSTEM COMPONENTS (ELFLDR / KEXP) ARE NOT EXPOSED AS USER PAYLOADS.</div>
+  <footer id="credits">EXPLOIT RESEARCH // <strong>SONIC ISO</strong> + <strong>JORDY</strong><span>SPIDER EXPERIENCE // <strong class="zero">zer0day</strong></span></footer>
 </main>
 
 <script>

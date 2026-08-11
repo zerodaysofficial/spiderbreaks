@@ -3,227 +3,144 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#060811">
-<title>SpiderKit // PS5 WebKit Lab</title>
+<meta name="theme-color" content="#050711">
+<title>SpiderKit // Spider Protocol</title>
 <link rel="icon" href="ui/spider-icon.png" type="image/png">
 <link rel="preload" href="ui/spider-icon.png" as="image" type="image/png">
 <style>
   :root {
-    color-scheme: dark;
-    --ink: #f6f8ff;
-    --muted: #8994ab;
-    --red: #ff174b;
-    --red-hot: #ff4669;
-    --blue: #2b6dff;
-    --panel: rgba(10, 14, 27, .76);
-    --line: rgba(146, 165, 205, .18);
+    color-scheme:dark; --ink:#f7f9ff; --muted:#8d99af; --red:#ff184c;
+    --red2:#ff5575; --blue:#3275ff; --green:#56e6a4; --line:rgba(151,170,211,.2);
+    --panel:rgba(7,11,22,.82);
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; width: 100%; min-height: 100%; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; width:100%; min-height:100%; }
   body {
-    min-height: 100vh;
-    overflow: hidden;
-    color: var(--ink);
-    background:
-      radial-gradient(circle at 14% 28%, rgba(255, 23, 75, .19), transparent 31%),
-      radial-gradient(circle at 86% 72%, rgba(43, 109, 255, .17), transparent 34%),
-      linear-gradient(145deg, #03050a 0%, #070b16 52%, #03040a 100%);
-    font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+    min-height:100vh; overflow:hidden; color:var(--ink);
+    background:radial-gradient(circle at 12% 22%,rgba(255,24,76,.22),transparent 31%),radial-gradient(circle at 88% 78%,rgba(50,117,255,.2),transparent 34%),linear-gradient(145deg,#02040a,#080d1a 52%,#03050b);
+    font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
   }
-  body::before,
-  body::after {
-    content: "";
-    position: fixed;
-    inset: -25vmax;
-    pointer-events: none;
-  }
+  body::before,body::after { content:""; position:fixed; pointer-events:none; }
   body::before {
-    opacity: .17;
-    background:
-      repeating-radial-gradient(circle at center, transparent 0 62px, rgba(255,255,255,.5) 63px 64px, transparent 65px 112px),
-      repeating-conic-gradient(from 0deg at center, transparent 0deg 14deg, rgba(255,255,255,.52) 15deg 15.8deg, transparent 16.5deg 30deg);
-    transform: rotate(-9deg) scale(1.15);
-    -webkit-mask-image: radial-gradient(circle, #000 0 42%, transparent 70%);
-    mask-image: radial-gradient(circle, #000 0 42%, transparent 70%);
+    inset:-34vmax; opacity:.14;
+    background:repeating-radial-gradient(circle at center,transparent 0 62px,rgba(255,255,255,.55) 63px 64px,transparent 65px 116px),repeating-conic-gradient(from 0deg at center,transparent 0 14deg,rgba(255,255,255,.62) 15deg 15.7deg,transparent 16.4deg 30deg);
+    transform:rotate(-8deg); -webkit-mask-image:radial-gradient(circle,#000 0 45%,transparent 72%); mask-image:radial-gradient(circle,#000 0 45%,transparent 72%);
   }
-  body::after {
-    inset: 0;
-    background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
-    background-size: 42px 42px;
-    opacity: .5;
-  }
-  .shell {
-    position: relative;
-    z-index: 1;
-    min-height: 100vh;
-    width: min(1180px, 100%);
-    margin: 0 auto;
-    padding: 28px 36px 22px;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-  }
-  .topbar,
-  .footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; letter-spacing: .16em; }
-  .brand-mark {
-    width: 34px; height: 34px; border: 1px solid rgba(255, 68, 102, .52);
-    border-radius: 50%; position: relative; box-shadow: 0 0 24px rgba(255,23,75,.22);
-  }
-  .brand-mark::before,
-  .brand-mark::after { content: ""; position: absolute; background: var(--red-hot); }
-  .brand-mark::before { width: 2px; height: 22px; left: 15px; top: 5px; }
-  .brand-mark::after { width: 22px; height: 2px; left: 5px; top: 15px; }
-  .brand strong { font-size: 14px; }
-  .brand span { color: var(--muted); font-size: 10px; }
-  .mode {
-    display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px;
-    border: 1px solid var(--line); border-radius: 999px; color: #b7c0d4;
-    background: rgba(4, 7, 14, .56); font: 700 10px/1.1 ui-monospace, Consolas, monospace;
-    letter-spacing: .12em;
-  }
-  .mode i { width: 7px; height: 7px; border-radius: 50%; background: #48e99c; box-shadow: 0 0 12px #48e99c; }
-  .hero {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: minmax(240px, .88fr) minmax(340px, 1.12fr);
-    align-items: center;
-    gap: clamp(32px, 7vw, 100px);
-    padding: 24px 4vw 18px;
-  }
-  .visual { position: relative; display: grid; place-items: center; min-height: 420px; }
-  .visual::before,
-  .visual::after {
-    content: ""; position: absolute; border-radius: 50%; pointer-events: none;
-  }
-  .visual::before {
-    width: 360px; height: 360px; border: 1px solid rgba(255, 51, 88, .22);
-    box-shadow: inset 0 0 80px rgba(255,23,75,.06), 0 0 80px rgba(43,109,255,.08);
-    animation: orbit 18s linear infinite;
-  }
-  .visual::after { width: 292px; height: 292px; border: 1px dashed rgba(103, 143, 255, .26); animation: orbit 13s linear infinite reverse; }
-  .mask {
-    position: relative; z-index: 2; width: min(315px, 72vw); height: auto;
-    aspect-ratio: 1; object-fit: cover; padding: 5px; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,.28); background: #fff;
-    box-shadow: 0 0 0 9px rgba(255,23,75,.08), 0 30px 48px rgba(0,0,0,.72);
-    animation: breathe 4.8s ease-in-out infinite;
-  }
-  .copy { max-width: 560px; }
-  .eyebrow { margin: 0 0 14px; color: var(--red-hot); font: 800 11px/1.2 ui-monospace, Consolas, monospace; letter-spacing: .26em; }
-  h1 { margin: 0; font-size: clamp(54px, 7vw, 88px); line-height: .88; letter-spacing: -.065em; font-weight: 900; }
-  h1 span { display: block; color: transparent; -webkit-text-stroke: 1px rgba(192, 211, 255, .46); font-size: .47em; letter-spacing: .23em; margin: 18px 0 0 5px; }
-  .lead { max-width: 470px; margin: 24px 0 26px; color: #a6b0c5; font-size: 15px; line-height: 1.7; }
-  .specs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-  .specs span { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: #bfc7d8; background: rgba(10,14,27,.52); font: 700 10px/1 ui-monospace, Consolas, monospace; letter-spacing: .08em; }
-  .payload-lock {
-    width:100%; max-width:560px; margin:0 0 17px; padding:10px;
-    border:1px solid rgba(128,145,181,.2); border-radius:12px;
-    background:rgba(6,10,20,.68); box-shadow:inset 0 1px rgba(255,255,255,.025);
-  }
-  .payload-lock-head {
-    position:relative; display:block; min-height:12px; margin:0 2px 9px;
-    color:#78849a; font:800 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em;
-  }
+  body::after { inset:0; opacity:.42; background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px); background-size:42px 42px; }
+  .shell { position:relative; z-index:1; width:min(1220px,100%); min-height:100vh; margin:0 auto; padding:24px 34px 18px; display:grid; grid-template-rows:auto 1fr auto; }
+  .topbar,.footer { display:flex; align-items:center; justify-content:space-between; gap:22px; }
+  .brand { display:flex; align-items:center; gap:12px; letter-spacing:.16em; }
+  .brand-mark { position:relative; width:38px; height:38px; border:1px solid rgba(255,85,117,.58); border-radius:50%; background:rgba(10,14,28,.75); box-shadow:0 0 25px rgba(255,24,76,.26); }
+  .brand-mark::before,.brand-mark::after { content:""; position:absolute; background:var(--red2); }
+  .brand-mark::before { width:2px; height:25px; top:6px; left:17px; }
+  .brand-mark::after { width:25px; height:2px; top:17px; left:6px; }
+  .brand strong { font-size:14px; } .brand b { color:var(--red2); }
+  .brand span { color:#707d95; font:700 9px/1 ui-monospace,Consolas,monospace; }
+  .mode { display:inline-flex; align-items:center; gap:8px; padding:9px 13px; border:1px solid var(--line); border-radius:999px; color:#b6c0d5; background:rgba(4,7,15,.72); font:800 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em; }
+  .mode i { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); }
+  body.resume-ready .mode { color:#aaf1ce; border-color:rgba(86,230,164,.4); }
+  .hero { min-height:0; display:grid; grid-template-columns:minmax(300px,.9fr) minmax(440px,1.1fr); align-items:center; gap:clamp(34px,6vw,90px); padding:20px 3vw 14px; }
+  .visual { position:relative; min-height:470px; display:grid; place-items:center; }
+  .halo,.halo::before,.halo::after { position:absolute; border-radius:50%; pointer-events:none; }
+  .halo { width:390px; height:390px; border:1px solid rgba(255,52,91,.26); box-shadow:inset 0 0 90px rgba(255,24,76,.07),0 0 80px rgba(50,117,255,.08); animation:orbit 20s linear infinite; }
+  .halo::before { content:""; inset:34px; border:1px dashed rgba(105,149,255,.3); }
+  .halo::after { content:""; inset:82px; border:1px solid rgba(255,255,255,.08); }
+  .mask-button { position:relative; z-index:3; width:315px; height:315px; padding:5px; border:1px solid rgba(255,255,255,.3); border-radius:50%; background:#fff; cursor:pointer; box-shadow:0 0 0 10px rgba(255,24,76,.08),0 34px 60px rgba(0,0,0,.72); animation:breathe 4.8s ease-in-out infinite; }
+  .mask-button:focus { outline:3px solid #fff; outline-offset:7px; }
+  .mask-button img { display:block; width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .orbit-tag { position:absolute; z-index:4; padding:7px 9px; border:1px solid var(--line); border-radius:7px; color:#8fa0bd; background:#070b16; font:800 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em; box-shadow:0 10px 24px rgba(0,0,0,.35); }
+  .orbit-tag.one { top:54px; right:28px; } .orbit-tag.two { bottom:68px; left:18px; } .orbit-tag.three { bottom:37px; right:47px; color:#9ce9c5; }
+  .web-burst .halo { animation-duration:2.2s; border-color:var(--red2); }
+  .web-burst .mask-button { box-shadow:0 0 0 13px rgba(255,24,76,.16),0 0 55px rgba(50,117,255,.34),0 34px 60px rgba(0,0,0,.72); }
+  .copy { max-width:600px; }
+  .eyebrow { margin:0 0 12px; color:var(--red2); font:900 10px/1 ui-monospace,Consolas,monospace; letter-spacing:.28em; }
+  h1 { margin:0; font-size:clamp(54px,6.7vw,88px); line-height:.86; letter-spacing:-.065em; font-weight:950; }
+  h1 span { display:block; margin:17px 0 0 4px; color:transparent; -webkit-text-stroke:1px rgba(197,214,255,.5); font-size:.43em; letter-spacing:.24em; }
+  .lead { max-width:520px; margin:20px 0 16px; color:#a5b0c5; font-size:14px; line-height:1.62; }
+  .telemetry { width:100%; margin:0 0 13px; border:1px solid var(--line); border-radius:12px; background:rgba(6,10,20,.7); border-collapse:separate; border-spacing:0; overflow:hidden; }
+  .telemetry td { width:33.33%; padding:10px 11px; border-right:1px solid var(--line); }
+  .telemetry td:last-child { border-right:0; }
+  .telemetry span { display:block; margin-bottom:5px; color:#66728a; font:800 7px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em; }
+  .telemetry strong { display:block; color:#dce4f4; font:900 9px/1 ui-monospace,Consolas,monospace; white-space:nowrap; }
+  .payload-lock { width:100%; margin:0 0 13px; padding:10px; border:1px solid rgba(128,145,181,.23); border-radius:12px; background:rgba(6,10,20,.78); box-shadow:inset 0 1px rgba(255,255,255,.03); }
+  .payload-lock-head { position:relative; display:block; min-height:12px; margin:0 2px 9px; color:#7c899f; font:900 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em; }
   .payload-lock-head b { position:absolute; top:0; right:0; color:#ff6a84; font-size:8px; }
   .payload-lock-list { display:block; width:100%; font-size:0; }
-  .locked-payload {
-    position:relative; display:inline-block!important; width:49.5%; height:32px; min-height:32px;
-    margin:0 1% 4px 0; padding:0 72px 0 68px; vertical-align:top;
-    overflow:hidden; border:1px solid #2a3449; border-radius:8px; color:#7e8a9f;
-    background:#0b101d; text-align:left; opacity:.7;
-    font-family:ui-monospace,Consolas,monospace; pointer-events:none;
-    -webkit-appearance:none; appearance:none;
-  }
+  .locked-payload { position:relative; display:inline-block!important; width:49.5%; height:30px; margin:0 1% 4px 0; padding:0 65px 0 61px; vertical-align:top; overflow:hidden; border:1px solid #29344a; border-radius:7px; color:#7f8ca2; background:#0a101d; text-align:left; opacity:.72; font-family:ui-monospace,Consolas,monospace; pointer-events:none; -webkit-appearance:none; appearance:none; }
   .locked-payload:nth-child(2n) { margin-right:0; }
-  .locked-payload strong { position:absolute; top:10px; left:10px; display:block; width:50px; color:#a8b2c4; font-size:9px; line-height:1; letter-spacing:.06em; }
-  .locked-payload small { display:block; overflow:hidden; padding-top:10px; font-size:8px; line-height:1; text-overflow:ellipsis; white-space:nowrap; }
-  .locked-payload::before { content:"LOCKED"; position:absolute; top:10px; right:9px; color:#ff6a84; font-size:7px; line-height:1; letter-spacing:.08em; }
-  .locked-payload::after {
-    content:""; position:absolute; top:0; right:0; bottom:0; left:0;
-    background:repeating-linear-gradient(135deg,transparent 0 8px,rgba(255,255,255,.018) 9px 10px);
+  .locked-payload strong { position:absolute; top:9px; left:9px; width:47px; color:#aab5c8; font-size:8px; line-height:1; letter-spacing:.05em; }
+  .locked-payload small { display:block; overflow:hidden; padding-top:9px; font-size:8px; line-height:1; text-overflow:ellipsis; white-space:nowrap; }
+  .locked-payload::before { content:"LOCKED"; position:absolute; top:9px; right:8px; color:#ff6a84; font-size:7px; line-height:1; letter-spacing:.06em; }
+  .payload-lock.starting { border-color:rgba(50,117,255,.55); box-shadow:0 0 28px rgba(50,117,255,.12); }
+  .payload-lock.starting .payload-lock-head b { color:#8db4ff; }
+  body.resume-ready .payload-lock { border-color:rgba(86,230,164,.42); }
+  body.resume-ready .payload-lock-head b { color:var(--green); }
+  body.resume-ready .locked-payload { opacity:1; border-color:#315346; color:#aacdbd; }
+  body.resume-ready .locked-payload::before { content:"SAVED"; color:var(--green); }
+  .action { position:relative; isolation:isolate; width:min(405px,100%); min-height:66px; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:0 22px; overflow:hidden; border:1px solid rgba(255,119,140,.58); border-radius:14px; color:#fff; text-decoration:none; background:linear-gradient(105deg,#75071d,#e20a3a 58%,#ff3157); box-shadow:0 18px 50px rgba(220,0,50,.3),inset 0 1px rgba(255,255,255,.25); transition:transform .16s,box-shadow .16s,border-color .16s; }
+  .action::before { content:""; position:absolute; z-index:-1; inset:0; transform:translateX(-110%); background:linear-gradient(100deg,transparent,rgba(255,255,255,.27),transparent); transition:transform .5s; }
+  .action:hover::before,.action:focus::before { transform:translateX(110%); }
+  .action:hover,.action:focus { outline:none; transform:translateY(-3px); border-color:#fff; box-shadow:0 0 0 4px rgba(255,255,255,.13),0 24px 64px rgba(226,0,52,.42); }
+  .action-copy { display:flex; flex-direction:column; gap:5px; }
+  .action-copy strong { font-size:17px; letter-spacing:.08em; }
+  .action-copy small { color:rgba(255,255,255,.72); font:800 8px/1 ui-monospace,Consolas,monospace; letter-spacing:.14em; }
+  .cross { display:grid; place-items:center; width:34px; height:34px; flex:0 0 auto; border:2px solid rgba(255,255,255,.78); border-radius:50%; font-size:17px; }
+  #status { min-height:18px; margin-top:10px; color:var(--muted); font:800 9px/1.4 ui-monospace,Consolas,monospace; letter-spacing:.07em; }
+  .footer { align-items:flex-start; flex-direction:column; gap:5px; padding-top:14px; border-top:1px solid var(--line); color:#66728a; font:800 9px/1.4 ui-monospace,Consolas,monospace; letter-spacing:.08em; }
+  .footer strong { color:#a6b1c7; } .footer .zero { color:var(--red2); }
+  #launchOverlay { position:fixed; z-index:30; inset:0; display:none; align-items:center; justify-content:center; padding:24px; background:rgba(2,4,10,.94); }
+  #launchOverlay.on { display:flex; }
+  .launch-card { width:560px; max-width:92vw; padding:28px; border:1px solid rgba(255,74,108,.42); border-radius:18px; background:linear-gradient(145deg,#090d1a,#050811); box-shadow:0 30px 100px rgba(0,0,0,.7),0 0 60px rgba(255,24,76,.1); }
+  .launch-card p { margin:0 0 9px; color:var(--red2); font:900 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.18em; }
+  .launch-card h2 { margin:0 0 23px; font:950 28px/1 system-ui,sans-serif; letter-spacing:-.03em; }
+  .launch-track { height:13px; padding:3px; overflow:hidden; border:1px solid #303d58; border-radius:99px; background:#050812; }
+  #launchFill { display:block; width:2%; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--red),var(--red2),var(--blue)); box-shadow:0 0 18px rgba(255,24,76,.6); transition:width .22s ease; }
+  .launch-meta { display:flex; justify-content:space-between; gap:15px; margin-top:12px; color:#8190aa; font:800 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.08em; }
+  @keyframes breathe { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-7px) scale(1.015)} }
+  @keyframes orbit { to{transform:rotate(360deg)} }
+  @media(max-width:780px) {
+    body { overflow-y:auto; }
+    .shell { padding:18px 18px 15px; }
+    .hero { grid-template-columns:1fr; gap:8px; padding:24px 0 36px; text-align:center; }
+    .visual { min-height:320px; } .halo { width:280px; height:280px; }
+    .mask-button { width:225px; height:225px; } .orbit-tag { display:none; }
+    .copy { margin:0 auto; } .lead { margin-left:auto; margin-right:auto; }
+    .action { margin:0 auto; text-align:left; }
+    .footer { align-items:flex-start; }
   }
-  .payload-lock.starting { border-color:rgba(52,120,255,.45); }
-  .payload-lock.starting .payload-lock-head b { color:#8eb5ff; }
-  .action {
-    position: relative; isolation: isolate; width: min(360px, 100%); min-height: 70px;
-    display: flex; align-items: center; justify-content: space-between; gap: 20px;
-    padding: 0 24px; overflow: hidden; border: 1px solid rgba(255, 119, 140, .5);
-    border-radius: 14px; color: white; text-decoration: none;
-    background: linear-gradient(105deg, #7f071f 0%, #ed0b3e 58%, #ff3157 100%);
-    box-shadow: 0 18px 50px rgba(220, 0, 50, .28), inset 0 1px rgba(255,255,255,.25);
-    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  @media(max-width:560px) { .locked-payload { display:block!important; width:100%; margin-right:0; } .telemetry strong { font-size:7px; } }
+  @media(max-height:760px) and (min-width:781px) {
+    .shell { padding-top:16px; padding-bottom:12px; }
+    .hero { padding-top:5px; padding-bottom:5px; }
+    .visual { min-height:350px; } .halo { width:305px; height:305px; }
+    .mask-button { width:250px; height:250px; }
+    h1 { font-size:57px; } .lead { margin-top:12px; margin-bottom:11px; line-height:1.45; }
+    .telemetry td { padding-top:8px; padding-bottom:8px; }
+    .locked-payload { height:26px; } .locked-payload strong,.locked-payload::before { top:7px; } .locked-payload small { padding-top:7px; }
+    .action { min-height:58px; }
   }
-  .action::before { content: ""; position: absolute; z-index: -1; inset: 0; transform: translateX(-105%); background: linear-gradient(100deg, transparent, rgba(255,255,255,.25), transparent); transition: transform .45s ease; }
-  .action:hover::before,
-  .action:focus::before { transform: translateX(105%); }
-  .action:hover,
-  .action:focus { outline: none; transform: translateY(-3px); border-color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.13), 0 24px 64px rgba(226,0,52,.4); }
-  .action:active { transform: translateY(1px); }
-  .action-copy { display: flex; flex-direction: column; gap: 5px; }
-  .action-copy strong { font-size: 18px; letter-spacing: .08em; }
-  .action-copy small { color: rgba(255,255,255,.7); font: 700 9px/1 ui-monospace, Consolas, monospace; letter-spacing: .14em; }
-  .cross { display: grid; place-items: center; width: 35px; height: 35px; flex: 0 0 auto; border: 2px solid rgba(255,255,255,.75); border-radius: 50%; font-size: 17px; box-shadow: inset 0 0 12px rgba(255,255,255,.11); }
-  #status { min-height: 20px; margin-top: 12px; color: var(--muted); font: 600 10px/1.4 ui-monospace, Consolas, monospace; letter-spacing: .06em; }
-  .footer { padding-top: 17px; border-top: 1px solid var(--line); color: #626d84; font-size: 10px; letter-spacing: .06em; }
-  .footer strong { color: #929db3; }
-  @keyframes breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.015); } }
-  @keyframes orbit { to { transform: rotate(360deg); } }
-  @media (max-width: 760px) {
-    body { overflow-y: auto; }
-    .shell { padding: 20px 20px 16px; }
-    .hero { grid-template-columns: 1fr; gap: 10px; text-align: center; padding: 26px 0 40px; }
-    .visual { min-height: 300px; }
-    .visual::before { width: 280px; height: 280px; }
-    .visual::after { width: 228px; height: 228px; }
-    .mask { width: 220px; }
-    .copy { margin: 0 auto; }
-    .lead { margin-left: auto; margin-right: auto; }
-    .specs { justify-content: center; }
-    .payload-lock { margin-left:auto; margin-right:auto; text-align:left; }
-    .locked-payload { display:block!important; width:100%; margin-right:0; }
-    .action { margin: 0 auto; text-align: left; }
-    .footer { align-items: flex-start; flex-direction: column; }
-  }
-  @media (max-height:760px) and (min-width:761px) {
-    .shell { padding-top:18px; padding-bottom:14px; }
-    .hero { padding-top:8px; padding-bottom:8px; }
-    .visual { min-height:340px; }
-    .visual::before { width:300px; height:300px; }
-    .visual::after { width:244px; height:244px; }
-    .mask { width:245px; }
-    h1 { font-size:58px; }
-    .lead { margin-top:14px; margin-bottom:14px; line-height:1.45; }
-    .specs { margin-bottom:10px; }
-    .payload-lock { margin-bottom:11px; padding-top:8px; padding-bottom:5px; }
-    .locked-payload { height:27px; min-height:27px; margin-bottom:3px; }
-    .locked-payload strong,.locked-payload::before { top:8px; }
-    .locked-payload small { padding-top:8px; }
-    .action { min-height:60px; }
-  }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
 </style>
 </head>
 <body>
 <main class="shell">
   <header class="topbar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div><strong>SPIDER//KIT</strong><br><span>PS5 WEBKIT LAB</span></div></div>
-    <div class="mode"><i aria-hidden="true"></i> SYSTEM READY</div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div><strong>SPIDER<b>//</b>KIT</strong><br><span>SPIDER PROTOCOL // PS5</span></div></div>
+    <div id="mode" class="mode"><i aria-hidden="true"></i><span id="modeText">SYSTEM READY</span></div>
   </header>
-
   <section class="hero" aria-labelledby="title">
-    <div class="visual"><img class="mask" src="ui/spider-icon.png" alt="SpiderKit mask"></div>
+    <div id="visual" class="visual">
+      <div class="halo"></div>
+      <button id="maskButton" class="mask-button" type="button" aria-label="Activate spider sense"><img src="ui/spider-icon.png" alt="SpiderKit mask"></button>
+      <span class="orbit-tag one">WEBKIT // ARMED</span><span class="orbit-tag two">KERNEL // THREADS</span><span class="orbit-tag three">ELF // :9021</span>
+    </div>
     <div class="copy">
-      <p class="eyebrow">NETCONTROL EXPLOIT CHAIN</p>
+      <p class="eyebrow">YOUR FRIENDLY NEIGHBORHOOD EXPLOIT HOST</p>
       <h1 id="title">SPIDERKIT<span>THREAD THE SYSTEM</span></h1>
-      <p class="lead">A controller-first launch interface for the PS5 WebKit chain, kernel stages and local ELF loader.</p>
-      <div class="specs" aria-label="Runtime features"><span>FW 9.00—12.00</span><span>ROP CHAIN</span><span>ELF :9021</span></div>
+      <p class="lead">A controller-first Spider-Man experience for the PS5 WebKit chain, firmware offsets, kernel stages and local ELF payload deck.</p>
+      <table class="telemetry" aria-label="SpiderKit telemetry"><tr><td><span>FIRMWARE</span><strong id="firmwareValue">DETECT ON CONSOLE</strong></td><td><span>OFFSET MAPS</span><strong>9.00 — 12.00</strong></td><td><span>PAYLOAD DECK</span><strong>10 ELF // READY</strong></td></tr></table>
       <section id="payloadLock" class="payload-lock" aria-label="Payloads locked until the ELF loader is online" aria-disabled="true">
-        <div class="payload-lock-head"><span>10 PAYLOADS // STAGED</span><b id="payloadLockState">LOCKED UNTIL ELF LOADER</b></div>
+        <div class="payload-lock-head"><span>SPIDER ARSENAL // 10 PAYLOADS</span><b id="payloadLockState">LOCKED UNTIL ELF LOADER</b></div>
         <div class="payload-lock-list">
           <button class="locked-payload" type="button" data-name="ftpsrv-ps5.elf" disabled><strong>FTP</strong><small>ftpsrv-ps5.elf</small></button>
           <button class="locked-payload" type="button" data-name="gdbsrv-ps5.elf" disabled><strong>GDB</strong><small>gdbsrv-ps5.elf</small></button>
@@ -237,25 +154,79 @@
           <button class="locked-payload" type="button" data-name="pldmgr_v0.5.1.elf" disabled><strong>PLDMGR</strong><small>pldmgr_v0.5.1.elf</small></button>
         </div>
       </section>
-      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=38" tabindex="0">
-        <span class="action-copy"><strong>BRAND NEW JAILBREAK</strong><small>START THE EXPLOIT SEQUENCE</small></span><span class="cross" aria-hidden="true">×</span>
-      </a>
-      <div id="status" aria-live="polite">PRESS × TO CONTINUE</div>
+      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=39" tabindex="0"><span class="action-copy"><strong id="startTitle">BRAND NEW JAILBREAK</strong><small id="startSub">START THE SPIDER PROTOCOL</small></span><span class="cross" aria-hidden="true">×</span></a>
+      <div id="status" aria-live="polite">PRESS × TO CONTINUE // SPIDER-SENSE ONLINE</div>
     </div>
   </section>
-
-  <footer class="footer"><span>Original exploit core by <strong>Jordy &amp; contributors</strong></span><span>Spider interface by <strong>zer0day</strong></span></footer>
+  <footer class="footer"><span>EXPLOIT RESEARCH // <strong>SONIC ISO</strong> + <strong>JORDY</strong></span><span>SPIDER EXPERIENCE // <strong class="zero">zer0day</strong></span></footer>
 </main>
+<div id="launchOverlay" aria-hidden="true"><div class="launch-card"><p>SPIDER PROTOCOL // HANDOFF</p><h2 id="launchTitle">OPENING EXPLOIT RUNTIME</h2><div class="launch-track"><i id="launchFill"></i></div><div class="launch-meta"><span id="launchLabel">SECURING ROUTE</span><b id="launchPercent">02%</b></div></div></div>
 <script>
-try {
-  var start = document.getElementById("start");
-  start.focus();
-  start.addEventListener("click", function () {
-    document.getElementById("status").textContent = "ENTERING THE WEBKIT CHAIN…";
-    document.getElementById("payloadLock").className = "payload-lock starting";
-    document.getElementById("payloadLockState").textContent = "WAITING FOR ELF LOADER";
-  });
-} catch (e) {}
+(function () {
+    var SESSION_KEY = "spiderkit:payload-session";
+    var start = document.getElementById("start");
+    var overlay = document.getElementById("launchOverlay");
+    var fill = document.getElementById("launchFill");
+    var percent = document.getElementById("launchPercent");
+    var label = document.getElementById("launchLabel");
+    var launching = false;
+    function readSavedSession() {
+        try {
+            var raw = localStorage.getItem(SESSION_KEY);
+            if (!raw) return null;
+            var parsed = JSON.parse(raw);
+            return parsed && parsed.v === 1 ? parsed : null;
+        } catch (e) { return null; }
+    }
+    function setLaunchProgress(value, text) {
+        fill.style.width = value + "%";
+        percent.textContent = (value < 10 ? "0" : "") + value + "%";
+        label.textContent = text;
+    }
+    function launch(target, resume) {
+        if (launching) return;
+        launching = true;
+        overlay.className = "on";
+        overlay.setAttribute("aria-hidden", "false");
+        document.getElementById("launchTitle").textContent = resume ? "RESTORING PAYLOAD DECK" : "OPENING EXPLOIT RUNTIME";
+        setLaunchProgress(8, resume ? "READING SAVED JAILBREAK STATE" : "SECURING ROUTE");
+        window.setTimeout(function () { setLaunchProgress(34, resume ? "SKIPPING KERNEL EXPLOIT" : "HANDOFF TO OFFSET SCANNER"); }, 170);
+        window.setTimeout(function () { setLaunchProgress(68, resume ? "OPENING SPIDER ARSENAL" : "STARTING WEBKIT RUNTIME"); }, 360);
+        window.setTimeout(function () { setLaunchProgress(100, resume ? "PAYLOAD DECK READY" : "RUNTIME ONLINE"); }, 570);
+        window.setTimeout(function () { location.href = target; }, 760);
+    }
+    var match = /PlayStation 5\/(\d+\.\d+)/.exec(navigator.userAgent || "");
+    if (match) document.getElementById("firmwareValue").textContent = "PS5 // " + match[1];
+    start.addEventListener("click", function (event) {
+        if (event && event.preventDefault) event.preventDefault();
+        document.getElementById("payloadLock").className = "payload-lock starting";
+        document.getElementById("payloadLockState").textContent = "WAITING FOR OFFSET MAP";
+        document.getElementById("status").textContent = "ENTERING THE SPIDER PROTOCOL...";
+        launch(start.href, document.body.className.indexOf("resume-ready") >= 0);
+        return false;
+    });
+    var maskButton = document.getElementById("maskButton");
+    maskButton.addEventListener("click", function () {
+        var visual = document.getElementById("visual");
+        visual.className = "visual web-burst";
+        document.getElementById("status").textContent = "SPIDER-SENSE AMPLIFIED // PRESS × TO LAUNCH";
+        window.setTimeout(function () { visual.className = "visual"; }, 2200);
+        try { start.focus(); } catch (e) { }
+    });
+    var saved = readSavedSession();
+    if (saved) {
+        document.body.className = "resume-ready";
+        document.getElementById("modeText").textContent = "JAILBREAK REMEMBERED";
+        document.getElementById("payloadLockState").textContent = "SAVED PAYLOAD DECK";
+        document.getElementById("startTitle").textContent = "RETURN TO PAYLOADS";
+        document.getElementById("startSub").textContent = "KERNEL EXPLOIT WILL NOT RUN AGAIN";
+        document.getElementById("status").textContent = "SAVED JAILBREAK FOUND // RESTORING PAYLOAD DECK";
+        start.href = "slopkit/poops.html?resume=1&payload=1&v=39";
+        window.setTimeout(function () { launch(start.href, true); }, 650);
+    } else {
+        try { start.focus(); } catch (e) { }
+    }
+})();
 </script>
 </body>
 </html>
