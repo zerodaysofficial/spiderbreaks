@@ -12,7 +12,7 @@ have been redesigned for a clearer controller-first experience.
 - Six staged payloads visible but disabled on the initial page
 - Five-step runtime rail: WebKit, kernel, kernel R/W, root and ELF loader
 - Full-screen `/payloads/` directory with ready, sending, sent and failed states
-- Directional controller navigation in a separate, PS5-friendly document
+- Directional controller navigation in the post-exploit payload menu
 - No external fonts, trackers or visual dependencies
 - All interface assets are stored locally
 
@@ -20,11 +20,11 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=36`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=37`
 
-After a successful chain, the runtime opens `payloads/index.html` inside the
-same live page. The separate directory document keeps the exploit runtime in
-memory while sending one selected ELF at a time to `127.0.0.1:9021`.
+After a successful chain, the runtime exposes its payload menu directly inside
+`slopkit/poops.html`, without navigating or creating a second frame. Selecting
+one entry sends that ELF to `127.0.0.1:9021`.
 
 The initial page only previews the six payloads in a disabled state. They are
 made selectable only after the runtime confirms that the ELF loader is online.
@@ -41,9 +41,9 @@ page cannot send a raw ELF to the loader without the live parent runtime.
 - Runtime HUD updates and decorative compositing are suspended during race
   windows, then restored after the timing-sensitive section finishes.
 - The runtime icon is a separate 192 px asset to reduce decoded image memory.
-- The payload directory uses a separate same-origin frame and six plain,
-  fixed-height buttons. It avoids Grid, nested Flexbox and automatic focus on
-  the first row, which improves post-exploit painting on the PS5 browser.
+- The six payload controls live directly in the runtime document and use
+  fixed-height block rows. No iframe or secondary page must be painted after
+  the kernel stages.
 
 These changes do not alter exploit primitives, firmware offsets, race counts,
 timeouts, syscall sequences, kernel-write targets or bundled payloads. A kernel

@@ -110,14 +110,39 @@
   #nav { display:none!important; }
   #arm { width:min(680px,90vw); padding:18px; color:#f2c886; text-align:center; }
   #wrap,#tally,#summary { display:none!important; }
-  #payloadMenu { display:none!important; }
-  #payloadBrowser { display:none; width:100%; height:calc(100vh - 48px); margin:48px 0 0; border:0; background:#050812; }
-  body.loader-ready { display:block; overflow:hidden; min-height:100vh; padding:0; }
+  #payloadMenu {
+    display:none; width:100%; max-width:680px; margin:4px auto 26px; padding:14px;
+    border:1px solid rgba(139,161,204,.23); border-radius:15px;
+    background:rgba(6,10,20,.9); box-shadow:0 22px 60px rgba(0,0,0,.34);
+  }
+  #payloadMenu.on { display:block!important; }
+  .payloadMenuHead { display:block; margin:0 2px 12px; padding:0 0 11px; border-bottom:1px solid #2a354d; }
+  .payloadMenuHead strong { display:block; color:#8df0bd; font-size:11px; letter-spacing:.12em; }
+  .payloadMenuHead span { display:block; margin-top:5px; color:#77839a; font-size:8px; letter-spacing:.08em; }
+  #payloadMenu .payloadTile {
+    display:block!important; visibility:visible!important; width:100%; height:52px;
+    min-height:52px; margin:0 0 7px; padding:0 13px; overflow:hidden;
+    border:1px solid #2d3952; border-radius:9px; color:#dce5f7;
+    background:#0a1020; text-align:left; text-decoration:none; white-space:nowrap;
+    font:800 11px/52px ui-monospace,Consolas,monospace;
+  }
+  #payloadMenu .payloadTile:focus { outline:3px solid #fff; outline-offset:1px; border-color:#fff; color:#fff; background:#451124; }
+  #payloadMenu .payloadTile.busy { opacity:.35; }
+  #payloadMenu .payloadTile[data-state="sending"] { color:#b6d2ff; border-color:#397cf1; background:#101f3f; }
+  #payloadMenu .payloadTile[data-state="sent"] { color:#a2f0c7; border-color:#2d8a62; background:#0d281f; }
+  #payloadMenu .payloadTile[data-state="failed"] { color:#ff9caf; border-color:#e83258; background:#32101a; }
+  #payloadMessage { min-height:34px; margin:12px 0 0; padding:9px 11px; color:#8f9bb1; border:1px solid #252f45; border-radius:8px; background:#070b15; font-size:9px; letter-spacing:.06em; }
+  #payloadMessage.error { color:#ff9caf; border-color:#7d263b; }
+  body.loader-ready { justify-content:flex-start; overflow-y:auto; min-height:100vh; padding-top:68px; }
   body.loader-ready::before,
   body.loader-ready::after { display:none; }
-  body.loader-ready .runtimePanel,
+  body.loader-ready .runtimePanel { display:flex!important; }
+  body.loader-ready #cat { width:88px; height:88px; margin-bottom:8px; }
+  body.loader-ready .sub { margin-bottom:11px; }
+  body.loader-ready #runtimeHud,
+  body.loader-ready #stage,
+  body.loader-ready #scr,
   body.loader-ready #failureMessage { display:none!important; }
-  body.loader-ready #payloadBrowser { display:block!important; }
   body.loader-ready #dt { display:none; }
   #dt { position:fixed; right:20px; bottom:18px; z-index:9; padding:8px 10px; color:#566177; background:rgba(7,10,19,.8); border:1px solid var(--line); border-radius:8px; font:700 9px/1 ui-monospace,Consolas,monospace; }
   #dt:focus { outline:2px solid #fff; }
@@ -155,13 +180,15 @@
 <div id="cfg"></div>
 <pre id="early"></pre>
 <pre id="scr"></pre>
-<div id="payloadMenu">
-  <a href="#" data-name="ftpsrv-ps5.elf" data-state="default"></a>
-  <a href="#" data-name="gdbsrv-ps5.elf" data-state="default"></a>
-  <a href="#" data-name="klogsrv-ps5.elf" data-state="default"></a>
-  <a href="#" data-name="kstuff.elf" data-state="default"></a>
-  <a href="#" data-name="shsrv-ps5.elf" data-state="default"></a>
-  <a href="#" data-name="websrv-ps5.elf" data-state="default"></a>
+<div id="payloadMenu" aria-label="Selectable ELF payloads">
+  <div class="payloadMenuHead"><strong>ELF LOADER ONLINE // PAYLOADS</strong><span>SELECT WITH THE DIRECTIONAL PAD, THEN PRESS ×</span></div>
+  <a class="payloadTile" href="#" data-code="FTP" data-size="188 KiB" data-name="ftpsrv-ps5.elf" data-state="default">FTP // ftpsrv-ps5.elf // 188 KiB // READY</a>
+  <a class="payloadTile" href="#" data-code="GDB" data-size="171 KiB" data-name="gdbsrv-ps5.elf" data-state="default">GDB // gdbsrv-ps5.elf // 171 KiB // READY</a>
+  <a class="payloadTile" href="#" data-code="LOG" data-size="133 KiB" data-name="klogsrv-ps5.elf" data-state="default">LOG // klogsrv-ps5.elf // 133 KiB // READY</a>
+  <a class="payloadTile" href="#" data-code="KST" data-size="1.5 MiB" data-name="kstuff.elf" data-state="default">KST // kstuff.elf // 1.5 MiB // READY</a>
+  <a class="payloadTile" href="#" data-code="SHL" data-size="964 KiB" data-name="shsrv-ps5.elf" data-state="default">SHL // shsrv-ps5.elf // 964 KiB // READY</a>
+  <a class="payloadTile" href="#" data-code="WEB" data-size="1.6 MiB" data-name="websrv-ps5.elf" data-state="default">WEB // websrv-ps5.elf // 1.6 MiB // READY</a>
+  <div id="payloadMessage" aria-live="polite">PAYLOADS READY // TARGET 127.0.0.1:9021</div>
 </div>
 <div id="nav"></div>
 <div id="arm" hidden>Open this page with <b>?go=1</b> to arm it. Nothing runs
@@ -175,9 +202,6 @@ otherwise.</div>
 <div id="tally"></div>
 <div id="summary"></div>
 </main>
-
-<iframe id="payloadBrowser" title="SpiderKit payload directory"
-  data-src="../payloads/?embedded=1&amp;v=36"></iframe>
 
 <div id="console" hidden></div>
 
@@ -224,7 +248,7 @@ const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
 
 const PROGRESS_KEY = "slopkit-poops:next";
 const RUNLOG_KEY = "slopkit-poops:last";
-const REV = "slopkit-poops-36-no-payload-autofocus";
+const REV = "slopkit-poops-37-inline-payload-menu";
 
 function storeGet(k) {
     try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
@@ -480,8 +504,7 @@ const tallyEl = document.getElementById("tally");
 const summaryEl = document.getElementById("summary");
 const navEl = document.getElementById("nav");
 const payloadMenuEl = document.getElementById("payloadMenu");
-const payloadBrowserEl = document.getElementById("payloadBrowser");
-const runtimePanelEl = document.getElementsByClassName("runtimePanel")[0];
+const payloadMessageEl = document.getElementById("payloadMessage");
 const rowByKey = new Map();
 let payloadSendBusy = false;
 const PAYLOAD_PORT = 9021;
@@ -493,41 +516,30 @@ let payloadSocketOptionStore = null;
 let payloadSendTimeoutStore = null;
 let payloadSenderBlocked = "";
 
-function sizePayloadBrowser() {
-    if (!payloadBrowserEl) return;
-    const height = Math.max(300, (window.innerHeight || 720) - 48);
-    payloadBrowserEl.style.height = height + "px";
-}
-
-function notifyPayloadBrowser(name, state, detail) {
-    if (!payloadBrowserEl) return;
-    try {
-        const child = payloadBrowserEl.contentWindow;
-        if (child && typeof child.spiderKitPayloadState === "function")
-            child.spiderKitPayloadState(name, state, detail || "");
-    } catch (e) { }
-}
-
 function showPayloadMenu() {
     navEl.textContent = "";
     navEl.style.display = "none";
     document.body.classList.add("loader-ready");
-    if (runtimePanelEl) runtimePanelEl.style.display = "none";
-    payloadMenuEl.style.display = "none";
-    sizePayloadBrowser();
-    payloadBrowserEl.style.display = "block";
-    const source = payloadBrowserEl.getAttribute("data-src");
-    if (!payloadBrowserEl.getAttribute("src") && source)
-        payloadBrowserEl.setAttribute("src", source);
-    if (!payloadBrowserEl.__resizeBound) {
-        window.addEventListener("resize", sizePayloadBrowser);
-        payloadBrowserEl.__resizeBound = true;
+    payloadMenuEl.className = "on";
+    if (payloadMessageEl) {
+        payloadMessageEl.className = "";
+        payloadMessageEl.textContent = "PAYLOADS READY // TARGET 127.0.0.1:9021";
     }
+    const tiles = payloadMenuEl.getElementsByTagName("a");
+    if (tiles.length) try { tiles[0].focus(); } catch (e) { }
+}
+
+function renderPayloadTile(tile, state) {
+    const labels = { "default":"READY", "sending":"SENDING", "sent":"SENT", "failed":"FAILED" };
+    tile.textContent = tile.getAttribute("data-code") + " // "
+        + tile.getAttribute("data-name") + " // "
+        + tile.getAttribute("data-size") + " // "
+        + (labels[state] || String(state).toUpperCase());
 }
 
 function setPayloadTileState(tile, state) {
     tile.setAttribute("data-state", state);
-    notifyPayloadBrowser(tile.getAttribute("data-name"), state, "");
+    renderPayloadTile(tile, state);
 }
 
 function payloadIsListed(name) {
@@ -684,17 +696,24 @@ async function sendPayloadToElfldr(name) {
 async function sendPayloadInPlace(name, tile) {
     if (payloadSendBusy) return;
     payloadSendBusy = true;
-    notifyPayloadBrowser("*", "busy", name);
     const tiles = payloadMenuEl.getElementsByTagName("a");
     for (let i = 0; i < tiles.length; ++i)
         tiles[i].className = "payloadTile busy";
     tile.className = "payloadTile";
     setPayloadTileState(tile, "sending");
+    if (payloadMessageEl) {
+        payloadMessageEl.className = "";
+        payloadMessageEl.textContent = "SENDING " + name + " TO 127.0.0.1:9021...";
+    }
     try {
         const result = await sendPayloadToElfldr(name);
         tile.className = "payloadTile";
         setPayloadTileState(tile, "sent");
-        notifyPayloadBrowser(name, "sent", result.bytes + " bytes sent");
+        if (payloadMessageEl) {
+            payloadMessageEl.className = "";
+            payloadMessageEl.textContent = "SENT // " + name + " // "
+                + result.bytes + " BYTES";
+        }
         flushMark("ELF-SENT", "name=" + clean(result.name) + "-bytes="
             + result.bytes + "-target=" + clean(result.target)
             + "-port=" + result.port);
@@ -704,8 +723,11 @@ async function sendPayloadInPlace(name, tile) {
     } catch (error) {
         tile.className = "payloadTile";
         setPayloadTileState(tile, "failed");
-        notifyPayloadBrowser(name, "failed",
-            clean(error && error.message ? error.message : error));
+        if (payloadMessageEl) {
+            payloadMessageEl.className = "error";
+            payloadMessageEl.textContent = "FAILED // " + name + " // "
+                + clean(error && error.message ? error.message : error);
+        }
         flushMark("ELF-SEND-FAILED", "name=" + clean(name) + "-why="
             + clean(error && error.message ? error.message : error));
     } finally {
@@ -714,13 +736,17 @@ async function sendPayloadInPlace(name, tile) {
             for (let i = 0; i < tiles.length; ++i)
                 tiles[i].className = "payloadTile busy";
             setCatResult(false);
-            notifyPayloadBrowser("*", "blocked", payloadSenderBlocked);
+            if (payloadMessageEl) {
+                payloadMessageEl.className = "error";
+                payloadMessageEl.textContent = "SENDER BLOCKED // REBOOT REQUIRED // "
+                    + payloadSenderBlocked;
+            }
             flushMark("ELF-SENDER-BLOCKED", clean(payloadSenderBlocked));
         } else {
             payloadSendBusy = false;
             for (let i = 0; i < tiles.length; ++i)
                 if (tiles[i] !== tile) tiles[i].className = "payloadTile";
-            notifyPayloadBrowser("*", "idle", name);
+            try { tile.focus(); } catch (e) { }
         }
     }
 }
@@ -736,27 +762,6 @@ async function sendPayloadInPlace(name, tile) {
         };
     }
 }
-
-window.spiderKitSelectPayload = function (name) {
-    if (typeof name !== "string" || !payloadIsListed(name)) {
-        notifyPayloadBrowser(String(name || ""), "failed",
-            "payload is not in the approved runtime list");
-        return false;
-    }
-    if (payloadSendBusy || payloadSenderBlocked) {
-        notifyPayloadBrowser(name, "failed",
-            payloadSenderBlocked || "another payload is being sent");
-        return false;
-    }
-    const tiles = payloadMenuEl.getElementsByTagName("a");
-    for (let i = 0; i < tiles.length; ++i) {
-        if (tiles[i].getAttribute("data-name") === name) {
-            sendPayloadInPlace(name, tiles[i]);
-            return true;
-        }
-    }
-    return false;
-};
 
 function stage(text, cls) {
     if (cls === "bad") setCatResult(false);
