@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 360" role="img" aria-labelledby="title desc">
+  <title id="title">SpiderKit mask</title>
+  <desc id="desc">An original red and blue geometric spider-inspired mask</desc>
+  <defs>
+    <linearGradient id="mask" x1="38" y1="22" x2="286" y2="336" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff324f"/>
+      <stop offset=".43" stop-color="#a9062d"/>
+      <stop offset="1" stop-color="#2a0415"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="42" y1="28" x2="274" y2="332" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff6a7d"/>
+      <stop offset=".45" stop-color="#f10f42"/>
+      <stop offset="1" stop-color="#2968ff"/>
+    </linearGradient>
+    <linearGradient id="eye" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffffff"/>
+      <stop offset=".56" stop-color="#dceaff"/>
+      <stop offset="1" stop-color="#72a7ff"/>
+    </linearGradient>
+    <filter id="eyeGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#00040d" flood-opacity=".78"/>
+    </filter>
+    <clipPath id="faceClip">
+      <path d="M160 18C98 18 53 57 39 115c-17 71 12 162 47 205 20 25 48 31 74 31s54-6 74-31c35-43 64-134 47-205C267 57 222 18 160 18Z"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <path d="M160 18C98 18 53 57 39 115c-17 71 12 162 47 205 20 25 48 31 74 31s54-6 74-31c35-43 64-134 47-205C267 57 222 18 160 18Z" fill="url(#mask)" stroke="url(#edge)" stroke-width="5"/>
+    <g clip-path="url(#faceClip)" fill="none" stroke="#060a13" stroke-linecap="round">
+      <path d="M160 9v343M160 108 43 45M160 108 20 131M160 108 35 226M160 108 82 348M160 108 277 45M160 108l140 23M160 108l125 118M160 108l78 240" stroke-width="6" opacity=".88"/>
+      <path d="M88 55c35 28 109 28 144 0M55 113c53 36 157 36 210 0M43 181c60 40 174 40 234 0M54 251c55 40 157 40 212 0M82 316c42 28 114 28 156 0" stroke-width="5" opacity=".78"/>
+      <path d="M160 18v334" stroke="#ff3558" stroke-width="2" opacity=".5"/>
+    </g>
+    <path d="M61 146c21-35 53-54 85-59-7 45-25 92-70 119-15-13-21-35-15-60Z" fill="#040711" stroke="#ff4966" stroke-width="5"/>
+    <path d="M259 146c-21-35-53-54-85-59 7 45 25 92 70 119 15-13 21-35 15-60Z" fill="#040711" stroke="#ff4966" stroke-width="5"/>
+    <path d="M72 147c18-25 39-39 62-45-8 34-24 67-55 87-9-11-12-27-7-42Z" fill="url(#eye)" filter="url(#eyeGlow)"/>
+    <path d="M248 147c-18-25-39-39-62-45 8 34 24 67 55 87 9-11 12-27 7-42Z" fill="url(#eye)" filter="url(#eyeGlow)"/>
+  </g>
+</svg>

