@@ -10,102 +10,83 @@
   * { box-sizing:border-box; }
   html,body { margin:0; min-height:100%; background:#050812; color:#edf2ff; }
   body {
-    padding:22px 24px 36px;
+    padding:18px 20px 30px; overflow-y:auto;
     background:linear-gradient(145deg,#080c18,#111b31 58%,#080b14);
     font:14px/1.35 ui-monospace,Consolas,monospace;
   }
-  #folder { width:90%; max-width:980px; margin:0 auto; }
-  #head {
-    position:relative; min-height:76px; margin:0 0 16px; padding:10px 190px 10px 78px;
-    border-bottom:1px solid #303b55;
-  }
-  #logo {
-    position:absolute; top:5px; left:0; display:block; width:62px; height:62px;
-    padding:3px; border:1px solid #a84059; border-radius:50%; background:#fff;
-  }
-  #head p { margin:3px 0 6px; color:#ff5777; font-size:10px; font-weight:bold; letter-spacing:.18em; }
-  h1 { margin:0; font:900 30px/1 system-ui,sans-serif; letter-spacing:-.03em; }
+  #folder { display:block; width:92%; max-width:980px; margin:0 auto; }
+  #headerTable { width:100%; margin:0 0 14px; border-collapse:collapse; border-bottom:1px solid #303b55; }
+  #headerTable td { height:70px; padding:5px 0 10px; vertical-align:middle; }
+  #logoCell { width:70px; }
+  #logo { display:block; width:58px; height:58px; padding:3px; border:1px solid #a84059; border-radius:50%; background:#fff; }
+  #titleCell p { margin:0 0 5px; color:#ff5777; font-size:9px; font-weight:bold; letter-spacing:.16em; }
+  h1 { margin:0; font:900 27px/1 system-ui,sans-serif; letter-spacing:-.025em; }
   #bridge {
-    position:absolute; top:23px; right:0; min-width:170px; padding:9px 10px;
-    border:1px solid #34415f; border-radius:8px; color:#8f9bb3; text-align:center;
-    font-size:9px; font-weight:bold; letter-spacing:.1em;
+    width:180px; padding:8px!important; border:1px solid #34415f;
+    color:#8f9bb3; background:#0a1020; text-align:center;
+    font-size:8px; font-weight:bold; letter-spacing:.08em;
   }
   #bridge.online { color:#94f0c0; border-color:#2d7b5b; background:#0c2a20; }
-  #files { display:block; width:100%; }
+  #files { display:block!important; width:100%; height:auto; }
   .file {
-    position:relative; display:block; width:100%; height:68px; margin:0 0 9px;
-    padding:10px 116px 8px 76px; overflow:hidden; color:#edf2ff;
-    border:1px solid #2c3851; border-radius:11px; background:#0a1020;
-    text-decoration:none;
+    display:block!important; visibility:visible!important; width:100%; height:54px;
+    min-height:54px; margin:0 0 7px; padding:0 14px; overflow:hidden;
+    border:1px solid #2c3851; border-radius:9px; color:#dce5f7;
+    background:#0a1020; text-align:left; white-space:nowrap;
+    font:800 12px/1 ui-monospace,Consolas,monospace;
+    -webkit-appearance:none; appearance:none;
   }
-  .file:focus { outline:3px solid #fff; outline-offset:1px; border-color:#fff; background:#451124; }
-  .file .type {
-    position:absolute; top:8px; left:10px; width:52px; height:50px;
-    border:1px solid #3b4b6c; border-radius:8px; color:#dce7ff; background:#131e35;
-    font:bold 12px/50px ui-monospace,Consolas,monospace; text-align:center;
-  }
-  .file strong { display:block; margin:2px 0 6px; font:800 14px/1.1 system-ui,sans-serif; }
-  .file small { display:block; color:#8390a8; font-size:9px; letter-spacing:.035em; }
-  .file .state {
-    position:absolute; top:19px; right:12px; width:86px; padding:7px 4px;
-    border:1px solid #34415b; border-radius:12px; color:#95a1b8;
-    text-align:center; font-size:8px; font-weight:bold; letter-spacing:.09em;
-  }
-  body.busy .file { opacity:.38; }
+  .file:focus { outline:3px solid #fff; outline-offset:1px; border-color:#fff; color:#fff; background:#451124; }
+  body.busy .file { opacity:.35; }
   body.busy .file.active { opacity:1; }
-  .file[data-state="sending"] { border-color:#397cf1; background:#101f3f; }
-  .file[data-state="sending"] .state { color:#afd0ff; border-color:#397cf1; }
-  .file[data-state="sent"] { border-color:#2d8a62; background:#0d281f; }
-  .file[data-state="sent"] .state { color:#9bf0c4; border-color:#2d8a62; }
-  .file[data-state="failed"] { border-color:#e83258; background:#32101a; }
-  .file[data-state="failed"] .state { color:#ff9caf; border-color:#e83258; }
+  .file[data-state="sending"] { color:#b6d2ff; border-color:#397cf1; background:#101f3f; }
+  .file[data-state="sent"] { color:#a2f0c7; border-color:#2d8a62; background:#0d281f; }
+  .file[data-state="failed"] { color:#ff9caf; border-color:#e83258; background:#32101a; }
   #message {
-    min-height:34px; margin:14px 0 0; padding:9px 12px; color:#8f9bb1;
+    min-height:36px; margin:13px 0 0; padding:10px 12px; color:#8f9bb1;
     border:1px solid #252f45; border-radius:8px; background:#070b15;
-    font-size:9px; letter-spacing:.07em;
+    font-size:9px; letter-spacing:.06em;
   }
   #message.error { color:#ff9caf; border-color:#7d263b; }
-  #system { margin:10px 2px 0; color:#59657c; font-size:8px; letter-spacing:.07em; }
+  #system { margin:9px 2px 0; color:#59657c; font-size:8px; letter-spacing:.06em; }
   @media(max-width:700px) {
-    body { padding:15px 12px 28px; }
+    body { padding:12px 10px 24px; }
     #folder { width:96%; }
-    #head { padding-right:0; }
     #bridge { display:none; }
-    .file { padding-right:96px; }
-    .file .state { width:72px; }
+    .file { padding-left:10px; font-size:10px; }
   }
   @media(max-height:650px) {
-    body { padding-top:12px; }
-    #head { min-height:62px; margin-bottom:10px; }
-    #logo { width:52px; height:52px; }
-    #head { padding-left:65px; }
-    h1 { font-size:24px; }
-    #bridge { top:14px; }
-    .file { height:57px; margin-bottom:6px; padding-top:7px; padding-left:66px; }
-    .file .type { top:6px; left:8px; width:44px; height:43px; line-height:43px; }
-    .file .state { top:13px; }
+    body { padding-top:8px; }
+    #headerTable { margin-bottom:8px; }
+    #headerTable td { height:56px; padding-bottom:6px; }
+    #logoCell { width:57px; }
+    #logo { width:48px; height:48px; }
+    h1 { font-size:22px; }
+    .file { height:44px; min-height:44px; margin-bottom:5px; }
+    #message { margin-top:8px; }
   }
 </style>
 </head>
-<body>
+<body tabindex="-1">
 <main id="folder">
-  <header id="head">
-    <img id="logo" src="../ui/spider-icon-runtime.png" alt="">
-    <p>ELF LOADER // /PAYLOADS/</p>
-    <h1>PAYLOAD DIRECTORY</h1>
-    <span id="bridge">DIRECTORY PREVIEW</span>
-  </header>
+  <table id="headerTable" aria-label="Payload directory header">
+    <tr>
+      <td id="logoCell"><img id="logo" src="../ui/spider-icon-runtime.png" alt=""></td>
+      <td id="titleCell"><p>ELF LOADER // /PAYLOADS/</p><h1>PAYLOAD DIRECTORY</h1></td>
+      <td id="bridge">DIRECTORY PREVIEW</td>
+    </tr>
+  </table>
 
   <section id="files" aria-label="Selectable ELF payloads">
-    <a class="file" style="display:block;visibility:visible" href="ftpsrv-ps5.elf" data-name="ftpsrv-ps5.elf" data-state="default"><span class="type">FTP</span><strong>ftpsrv-ps5.elf</strong><small>FTP server // 188 KiB</small><span class="state">READY</span></a>
-    <a class="file" style="display:block;visibility:visible" href="gdbsrv-ps5.elf" data-name="gdbsrv-ps5.elf" data-state="default"><span class="type">GDB</span><strong>gdbsrv-ps5.elf</strong><small>Remote debugger // 171 KiB</small><span class="state">READY</span></a>
-    <a class="file" style="display:block;visibility:visible" href="klogsrv-ps5.elf" data-name="klogsrv-ps5.elf" data-state="default"><span class="type">LOG</span><strong>klogsrv-ps5.elf</strong><small>Kernel log stream // 133 KiB</small><span class="state">READY</span></a>
-    <a class="file" style="display:block;visibility:visible" href="kstuff.elf" data-name="kstuff.elf" data-state="default"><span class="type">KST</span><strong>kstuff.elf</strong><small>Kernel utility payload // 1.5 MiB</small><span class="state">READY</span></a>
-    <a class="file" style="display:block;visibility:visible" href="shsrv-ps5.elf" data-name="shsrv-ps5.elf" data-state="default"><span class="type">&gt;_</span><strong>shsrv-ps5.elf</strong><small>Remote shell server // 964 KiB</small><span class="state">READY</span></a>
-    <a class="file" style="display:block;visibility:visible" href="websrv-ps5.elf" data-name="websrv-ps5.elf" data-state="default"><span class="type">WEB</span><strong>websrv-ps5.elf</strong><small>Local web server // 1.6 MiB</small><span class="state">READY</span></a>
+    <button class="file" type="button" data-code="FTP" data-size="188 KiB" data-name="ftpsrv-ps5.elf" data-state="default">FTP // ftpsrv-ps5.elf // 188 KiB // READY</button>
+    <button class="file" type="button" data-code="GDB" data-size="171 KiB" data-name="gdbsrv-ps5.elf" data-state="default">GDB // gdbsrv-ps5.elf // 171 KiB // READY</button>
+    <button class="file" type="button" data-code="LOG" data-size="133 KiB" data-name="klogsrv-ps5.elf" data-state="default">LOG // klogsrv-ps5.elf // 133 KiB // READY</button>
+    <button class="file" type="button" data-code="KST" data-size="1.5 MiB" data-name="kstuff.elf" data-state="default">KST // kstuff.elf // 1.5 MiB // READY</button>
+    <button class="file" type="button" data-code="SHL" data-size="964 KiB" data-name="shsrv-ps5.elf" data-state="default">SHL // shsrv-ps5.elf // 964 KiB // READY</button>
+    <button class="file" type="button" data-code="WEB" data-size="1.6 MiB" data-name="websrv-ps5.elf" data-state="default">WEB // websrv-ps5.elf // 1.6 MiB // READY</button>
   </section>
 
-  <div id="message">PRESS × ON A FILE TO SEND IT TO 127.0.0.1:9021 // UI 35</div>
+  <div id="message" aria-live="polite">PRESS ↓ TO SELECT, THEN × TO SEND // UI 36</div>
   <div id="system">SYSTEM COMPONENTS (ELFLDR / KEXP) ARE NOT EXPOSED AS USER PAYLOADS.</div>
 </main>
 
@@ -135,11 +116,17 @@
         return null;
     }
 
-    function setFileState(file, state) {
+    function renderFile(file, state) {
         var labels = { "default":"READY", "sending":"SENDING", "sent":"SENT", "failed":"FAILED" };
+        file.textContent = file.getAttribute("data-code") + " // "
+            + file.getAttribute("data-name") + " // "
+            + file.getAttribute("data-size") + " // "
+            + (labels[state] || String(state).toUpperCase());
+    }
+
+    function setFileState(file, state) {
         file.setAttribute("data-state", state);
-        var label = file.getElementsByClassName("state")[0];
-        if (label) label.textContent = labels[state] || String(state).toUpperCase();
+        renderFile(file, state);
     }
 
     window.spiderKitPayloadState = function (name, state, detail) {
@@ -199,24 +186,30 @@
 
     document.addEventListener("keydown", function (event) {
         var key = event.key || "";
-        if (key !== "ArrowUp" && key !== "ArrowDown" && key !== "Home" && key !== "End") return;
-        var current = 0;
+        var current = -1;
         for (var i = 0; i < files.length; ++i)
             if (files[i] === document.activeElement) current = i;
+
+        if ((key === "Enter" || key === " ") && current < 0 && files.length) {
+            if (event.preventDefault) event.preventDefault();
+            message.className = "";
+            message.textContent = "PRESS ↓ TO SELECT A PAYLOAD, THEN × TO SEND.";
+            return;
+        }
+        if (key !== "ArrowUp" && key !== "ArrowDown" && key !== "Home" && key !== "End") return;
+
         var next = current;
-        if (key === "ArrowUp") next = Math.max(0, current - 1);
-        if (key === "ArrowDown") next = Math.min(files.length - 1, current + 1);
+        if (key === "ArrowDown") next = current < 0 ? 0 : Math.min(files.length - 1, current + 1);
+        if (key === "ArrowUp") next = current < 0 ? files.length - 1 : Math.max(0, current - 1);
         if (key === "Home") next = 0;
         if (key === "End") next = files.length - 1;
         if (event.preventDefault) event.preventDefault();
         try { files[next].focus(); } catch (e) { }
     });
 
-    if (files.length) {
-        window.setTimeout(function () {
-            try { files[0].focus(); } catch (e) { }
-        }, 50);
-    }
+    window.setTimeout(function () {
+        try { document.body.focus(); } catch (e) { }
+    }, 50);
 })();
 </script>
 </body>

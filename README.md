@@ -20,7 +20,7 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=35`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=36`
 
 After a successful chain, the runtime opens `payloads/index.html` inside the
 same live page. The separate directory document keeps the exploit runtime in
@@ -41,9 +41,9 @@ page cannot send a raw ELF to the loader without the live parent runtime.
 - Runtime HUD updates and decorative compositing are suspended during race
   windows, then restored after the timing-sensitive section finishes.
 - The runtime icon is a separate 192 px asset to reduce decoded image memory.
-- The payload directory uses a separate same-origin frame and a single-column
-  fixed-height list. This avoids repainting the exploit document's card tree
-  after the kernel stages and avoids Grid, nested Flexbox and focus scrolling.
+- The payload directory uses a separate same-origin frame and six plain,
+  fixed-height buttons. It avoids Grid, nested Flexbox and automatic focus on
+  the first row, which improves post-exploit painting on the PS5 browser.
 
 These changes do not alter exploit primitives, firmware offsets, race counts,
 timeouts, syscall sequences, kernel-write targets or bundled payloads. A kernel
