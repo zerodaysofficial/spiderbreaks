@@ -876,7 +876,9 @@ function validatePayloadElf(bytes) {
     const ehsize = view.getUint16(52, true);
     const phentsize = view.getUint16(54, true);
     const phnum = view.getUint16(56, true);
-    const phoff = Number(view.getBigUint64(32, true));
+    const phoffLow = view.getUint32(32, true);
+    const phoffHigh = view.getUint32(36, true);
+    const phoff = phoffLow + (phoffHigh * 0x100000000);
 
     if (machine !== 0x3e)
         throw new Error("payload is not x86-64 ELF");
