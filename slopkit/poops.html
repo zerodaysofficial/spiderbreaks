@@ -694,6 +694,10 @@ const PAYLOAD_BUFFER_SIZE = 0x10000;
 const PAYLOAD_MAX_SIZE = 0xC00000;
 const PAYLOAD_ASSET_REV = "44";
 const PAYLOAD_COOLDOWN_MS = 1200;
+const PAYLOAD_SHA256 = Object.freeze({
+    "kstuff.elf": "ec5212794dc6e44ee8e70fd0549abec6d3dac8c3e03ddbeafd9f869ffe97d4e8",
+    "PS5 TROPHY UNLOCKER.ELF": "2ae1f72e72be3f5c8f1f067602620ff849f5d9a2ace5d9fa20f1087485a701a9"
+});
 let payloadLastSuccessAt = 0;
 let payloadSendStore = null;
 let payloadSockaddrStore = null;
@@ -892,6 +896,55 @@ function validatePayloadElf(bytes) {
         throw new Error("payload program-header table is outside the file");
     if (phoff + (phentsize * phnum) > bytes.length)
         throw new Error("payload program-header table is truncated");
+
+    let loadSegments = 0;
+    for (let i = 0; i < phnum; ++i) {
+        const base = phoff + (i * phentsize);
+        const pType = view.getUint32(base, true);
+        const offLow = view.getUint32(base + 8, true);
+        const offHigh = view.getUint32(base + 12, true);
+        const fileLow = view.getUint32(base + 32, true);
+        const fileHigh = view.getUint32(base + 36, true);
+        const memLow = view.getUint32(base + 40, true);
+        const memHigh = view.getUint32(base + 44, true);
+        const pOffset = offLow + (offHigh * 0x100000000);
+        const pFileSz = fileLow + (fileHigh * 0x100000000);
+        const pMemSz = memLow + (memHigh * 0x100000000);
+
+        if (!Number.isSafeInteger(pOffset) || !Number.isSafeInteger(pFileSz)
+            || !Number.isSafeInteger(pMemSz))
+            throw new Error("payload contains an oversized program segment");
+        if (pFileSz && (pOffset > bytes.length
+            || pFileSz > bytes.length - pOffset))
+            throw new Error("payload program segment extends outside the file");
+        if (pMemSz < pFileSz)
+            throw new Error("payload program segment has memsz smaller than filesz");
+        if (pType === 1) loadSegments++;
+    }
+    if (!loadSegments)
+        throw new Error("payload has no PT_LOAD program segment");
+}
+
+function hexDigest(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let out = "";
+    for (let i = 0; i < bytes.length; ++i)
+        out += bytes[i].toString(16).padStart(2, "0");
+    return out;
+}
+
+async function verifyKnownPayloadIntegrity(name, bytes) {
+    const expected = PAYLOAD_SHA256[name];
+    if (!expected) return { checked: false, detail: "no pinned checksum" };
+    if (!globalThis.crypto || !globalThis.crypto.subtle
+        || typeof globalThis.crypto.subtle.digest !== "function")
+        return { checked: false, detail: "WebCrypto unavailable" };
+
+    const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+    const actual = hexDigest(digest);
+    if (actual !== expected)
+        throw new Error("payload SHA-256 mismatch; refusing to send cached or corrupted ELF");
+    return { checked: true, detail: actual };
 }
 
 async function sendPayloadToElfldr(name) {
@@ -923,6 +976,13 @@ async function sendPayloadToElfldr(name) {
     if (bytes.length > PAYLOAD_MAX_SIZE)
         throw new Error("payload is larger than the 12 MiB limit");
     validatePayloadElf(bytes);
+    const integrity = await verifyKnownPayloadIntegrity(name, bytes);
+    if (integrity.checked)
+        flushMark("ELF-INTEGRITY-OK", "name=" + clean(name)
+            + "-sha256=" + integrity.detail);
+    else
+        flushMark("ELF-INTEGRITY-SKIP", "name=" + clean(name)
+            + "-why=" + clean(integrity.detail));
 
     preparePayloadSender();
     let fd = -1;
