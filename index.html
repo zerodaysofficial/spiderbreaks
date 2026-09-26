@@ -187,8 +187,29 @@
             var raw = localStorage.getItem(SESSION_KEY);
             if (!raw) return null;
             var parsed = JSON.parse(raw);
-            return parsed && (parsed.v === 1 || parsed.v === 2) ? parsed : null;
-        } catch (e) { return null; }
+            if (!parsed || (parsed.v !== 1 && parsed.v !== 2)) {
+                localStorage.removeItem(SESSION_KEY);
+                return null;
+            }
+            if (parsed.v === 2) {
+                if (typeof parsed.bootId !== "string"
+                    || parsed.bootId.length < 8 || parsed.bootId.length > 256
+                    || parsed.bootId.indexOf("kern.boottime=") < 0) {
+                    localStorage.removeItem(SESSION_KEY);
+                    return null;
+                }
+                if (parsed.sent !== undefined
+                    && (!parsed.sent || typeof parsed.sent !== "object"
+                        || Array.isArray(parsed.sent))) {
+                    localStorage.removeItem(SESSION_KEY);
+                    return null;
+                }
+            }
+            return parsed;
+        } catch (e) {
+            try { localStorage.removeItem(SESSION_KEY); } catch (_) { }
+            return null;
+        }
     }
     function setLaunchProgress(value, text) {
         fill.style.width = value + "%";
