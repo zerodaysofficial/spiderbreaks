@@ -693,6 +693,8 @@ const PAYLOAD_PORT = 9021;
 const PAYLOAD_BUFFER_SIZE = 0x10000;
 const PAYLOAD_MAX_SIZE = 0xC00000;
 const PAYLOAD_ASSET_REV = "44";
+const PAYLOAD_COOLDOWN_MS = 1200;
+let payloadLastSuccessAt = 0;
 let payloadSendStore = null;
 let payloadSockaddrStore = null;
 let payloadSocketOptionStore = null;
@@ -855,6 +857,41 @@ async function probePayloadLoader() {
     }
 }
 
+function validatePayloadElf(bytes) {
+    if (bytes.length < 0x40)
+        throw new Error("payload is too small to contain a valid ELF64 header");
+    if (bytes[0] !== 0x7f || bytes[1] !== 0x45
+        || bytes[2] !== 0x4c || bytes[3] !== 0x46)
+        throw new Error("payload does not start with the ELF signature");
+    if (bytes[4] !== 2)
+        throw new Error("payload is not ELF64");
+    if (bytes[5] !== 1)
+        throw new Error("payload is not little-endian ELF");
+    if (bytes[6] !== 1)
+        throw new Error("payload has an unsupported ELF version");
+
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const type = view.getUint16(16, true);
+    const machine = view.getUint16(18, true);
+    const ehsize = view.getUint16(52, true);
+    const phentsize = view.getUint16(54, true);
+    const phnum = view.getUint16(56, true);
+    const phoff = Number(view.getBigUint64(32, true));
+
+    if (machine !== 0x3e)
+        throw new Error("payload is not x86-64 ELF");
+    if (type !== 2 && type !== 3)
+        throw new Error("payload ELF type is not executable or shared-object");
+    if (ehsize < 0x40)
+        throw new Error("payload ELF header is truncated");
+    if (!phnum || phentsize < 0x38)
+        throw new Error("payload has no usable program headers");
+    if (!Number.isSafeInteger(phoff) || phoff < 0x40 || phoff >= bytes.length)
+        throw new Error("payload program-header table is outside the file");
+    if (phoff + (phentsize * phnum) > bytes.length)
+        throw new Error("payload program-header table is truncated");
+}
+
 async function sendPayloadToElfldr(name) {
     if (!elfldrSpawned)
         throw new Error("ELF loader is not ready");
@@ -867,6 +904,12 @@ async function sendPayloadToElfldr(name) {
     if (!payloadIsListed(name))
         throw new Error("payload is not listed in this menu");
 
+    const loaderProbe = await probePayloadLoader();
+    if (!loaderProbe.ok) {
+        payloadSenderBlocked = "ELF loader stopped answering on 127.0.0.1:9021; reboot required before another payload";
+        throw new Error(payloadSenderBlocked + (loaderProbe.detail ? " (" + loaderProbe.detail + ")" : ""));
+    }
+
     const response = await fetch("../payloads/" + encodeURIComponent(name)
         + "?v=" + PAYLOAD_ASSET_REV,
         { cache: "no-store" });
@@ -877,9 +920,7 @@ async function sendPayloadToElfldr(name) {
         throw new Error("payload is empty");
     if (bytes.length > PAYLOAD_MAX_SIZE)
         throw new Error("payload is larger than the 12 MiB limit");
-    if (bytes.length < 4 || bytes[0] !== 0x7f || bytes[1] !== 0x45
-        || bytes[2] !== 0x4c || bytes[3] !== 0x46)
-        throw new Error("payload does not start with the ELF signature");
+    validatePayloadElf(bytes);
 
     preparePayloadSender();
     let fd = -1;
@@ -974,6 +1015,15 @@ async function sendPayloadInPlace(name, tile) {
         return;
     }
     if (payloadSendBusy) return;
+    const cooldownLeft = PAYLOAD_COOLDOWN_MS - (Date.now() - payloadLastSuccessAt);
+    if (payloadLastSuccessAt && cooldownLeft > 0) {
+        if (payloadMessageEl) {
+            payloadMessageEl.className = "";
+            payloadMessageEl.textContent = "PAYLOAD COOLDOWN // WAIT "
+                + Math.ceil(cooldownLeft / 100) / 10 + "s BEFORE THE NEXT ELF";
+        }
+        return;
+    }
     payloadSendBusy = true;
     const tiles = payloadMenuEl.getElementsByClassName("payloadTile");
     for (let i = 0; i < tiles.length; ++i)
@@ -986,6 +1036,7 @@ async function sendPayloadInPlace(name, tile) {
     }
     try {
         const result = await sendPayloadToElfldr(name);
+        payloadLastSuccessAt = Date.now();
         rememberPayloadSent(name);
         tile.className = "payloadTile activeTile";
         tile.setAttribute("aria-disabled", "true");
