@@ -234,6 +234,27 @@
             return Promise.resolve({ ok: false, detail: "unsupported firmware " + firmware });
         return Promise.resolve({ ok: true, detail: "firmware profile ready for " + firmware });
     }
+    function prefetchAsset(href) {
+        try {
+            var link = document.createElement("link");
+            link.rel = "prefetch";
+            link.href = href;
+            document.head.appendChild(link);
+        } catch (e) { }
+    }
+    function warmRuntimeAssets() {
+        var assets = [
+            "slopkit/poops.html?v=45",
+            "slopkit/rop.js",
+            "slopkit/main.js?v=16",
+            "slopkit/syscalls.js",
+            "slopkit/rop_slave.js"
+        ];
+        for (var i = 0; i < assets.length; ++i) prefetchAsset(assets[i]);
+        var firmware = currentFirmware();
+        if (firmware && SUPPORTED_FIRMWARES[firmware])
+            prefetchAsset("offsets/" + encodeURIComponent(firmware) + ".js?v=45");
+    }
     async function launch(target, resume) {
         if (launching) return;
         launching = true;
@@ -263,6 +284,7 @@
     }
     var detectedFirmware = currentFirmware();
     if (detectedFirmware) document.getElementById("firmwareValue").textContent = "PS5 // " + detectedFirmware;
+    warmRuntimeAssets();
     start.addEventListener("click", function (event) {
         if (event && event.preventDefault) event.preventDefault();
         document.getElementById("payloadLock").className = "payload-lock starting";
