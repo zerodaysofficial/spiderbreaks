@@ -710,7 +710,7 @@ const payloadResetEl = document.getElementById("payloadReset");
 const rowByKey = new Map();
 let payloadSendBusy = false;
 const PAYLOAD_PORT = 9021;
-const PAYLOAD_BUFFER_SIZE = 0x10000;
+const PAYLOAD_BUFFER_SIZE = 0x40000;
 const PAYLOAD_MAX_SIZE = 0xC00000;
 const PAYLOAD_ASSET_REV = "45";
 const PAYLOAD_COOLDOWN_MS = 1200;
@@ -1539,27 +1539,9 @@ const driver = {
 
 const nogcHard = { carrier: null, p: null, chain: null };
 
-async function preflight() {
-    if (typeof prepare !== "function")
-        throw new Error("main.js did not evaluate -- `prepare` is undefined.");
-    if (typeof worker_rop !== "function")
-        throw new Error("rop.js did not evaluate -- `worker_rop` is undefined");
-    if (typeof SYS_GETPID === "undefined")
-        throw new Error("syscalls.js did not evaluate -- SYS_GETPID is undefined");
-
-    await window.offsetsReady;
-    flushMark("OFFSETS-READY", "fw=" + window.fw_str
-        + "-gadgets=" + Object.keys(wk_gadgetmap).length
-        + "-syscalls=" + Object.keys(syscall_map).length);
-
-    if (!wk_gadgetmap || !Object.keys(wk_gadgetmap).length
-        || !syscall_map || !Object.keys(syscall_map).length)
-        throw new Error("../offsets/" + window.fw_str + ".js loaded but is empty: "
-            + Object.keys(wk_gadgetmap || {}).length + " gadgets, "
-            + Object.keys(syscall_map || {}).length + " syscalls.");
-
+function probeRopWorker() {
     let w = null;
-    const verdict = await new Promise(resolve => {
+    return new Promise(resolve => {
         let done = false;
         const finish = v => {
             if (done) return;
@@ -1575,6 +1557,29 @@ async function preflight() {
             w.postMessage(0);
         } catch (err) { clearTimeout(t); finish("worker-threw"); }
     });
+}
+
+async function preflight() {
+    if (typeof prepare !== "function")
+        throw new Error("main.js did not evaluate -- `prepare` is undefined.");
+    if (typeof worker_rop !== "function")
+        throw new Error("rop.js did not evaluate -- `worker_rop` is undefined");
+    if (typeof SYS_GETPID === "undefined")
+        throw new Error("syscalls.js did not evaluate -- SYS_GETPID is undefined");
+
+    const workerProbe = probeRopWorker();
+    await window.offsetsReady;
+    flushMark("OFFSETS-READY", "fw=" + window.fw_str
+        + "-gadgets=" + Object.keys(wk_gadgetmap).length
+        + "-syscalls=" + Object.keys(syscall_map).length);
+
+    if (!wk_gadgetmap || !Object.keys(wk_gadgetmap).length
+        || !syscall_map || !Object.keys(syscall_map).length)
+        throw new Error("../offsets/" + window.fw_str + ".js loaded but is empty: "
+            + Object.keys(wk_gadgetmap || {}).length + " gadgets, "
+            + Object.keys(syscall_map || {}).length + " syscalls.");
+
+    const verdict = await workerProbe;
     flushMark("WORKER-PROBE", verdict);
     if (verdict !== "ok")
         throw new Error("rop_slave.js is not usable (" + verdict + ")");
