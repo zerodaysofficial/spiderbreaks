@@ -244,11 +244,12 @@
     }
     function warmRuntimeAssets() {
         var assets = [
-            "slopkit/poops.html?v=45",
-            "slopkit/rop.js",
-            "slopkit/main.js?v=16",
-            "slopkit/syscalls.js",
-            "slopkit/rop_slave.js"
+            "slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=45",
+            "slopkit/poops.html?go=1&trigger=netcontrol&resume=1&payload=1&v=45",
+            "slopkit/rop.js?v=45",
+            "slopkit/main.js?v=45",
+            "slopkit/syscalls.js?v=45",
+            "slopkit/rop_slave.js?v=45"
         ];
         for (var i = 0; i < assets.length; ++i) prefetchAsset(assets[i]);
         var firmware = currentFirmware();
