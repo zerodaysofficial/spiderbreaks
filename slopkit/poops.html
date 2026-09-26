@@ -302,12 +302,32 @@ function persistentJson(k) {
     if (!raw) return null;
     try { return JSON.parse(raw); } catch { return null; }
 }
+function validPayloadSessionRecord(record) {
+    if (!record || (record.v !== 1 && record.v !== 2)) return false;
+    if (record.v === 1) return true;
+    if (typeof record.bootId !== "string"
+        || record.bootId.length < 8 || record.bootId.length > 256
+        || record.bootId.indexOf("kern.boottime=") < 0)
+        return false;
+    if (record.sent !== undefined
+        && (!record.sent || typeof record.sent !== "object"
+            || Array.isArray(record.sent)))
+        return false;
+    return true;
+}
+
 function savedPayloadSession() {
-    const candidates = [storeJson(PAYLOAD_SESSION_KEY),
-        persistentJson(PAYLOAD_SESSION_KEY)].filter(record => record
-            && (record.v === 1 || record.v === 2));
+    const sessionRecord = storeJson(PAYLOAD_SESSION_KEY);
+    const persistentRecord = persistentJson(PAYLOAD_SESSION_KEY);
+    if (sessionRecord && !validPayloadSessionRecord(sessionRecord))
+        storeDel(PAYLOAD_SESSION_KEY);
+    if (persistentRecord && !validPayloadSessionRecord(persistentRecord))
+        persistentDel(PAYLOAD_SESSION_KEY);
+
+    const candidates = [sessionRecord, persistentRecord]
+        .filter(validPayloadSessionRecord);
     if (!candidates.length) return null;
-    candidates.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    candidates.sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0));
     return candidates[0];
 }
 let payloadSessionActive = false;
