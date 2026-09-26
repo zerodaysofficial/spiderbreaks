@@ -1558,30 +1558,23 @@ async function preflight() {
             + Object.keys(wk_gadgetmap || {}).length + " gadgets, "
             + Object.keys(syscall_map || {}).length + " syscalls.");
 
-    let verdict = "ok";
-    try {
-        const r = await fetch("rop_slave.js", { cache: "no-store" });
-        if (!r.ok) verdict = "http-" + r.status;
-    } catch (err) { verdict = "fetch-threw"; }
-    if (verdict === "ok") {
-        let w = null;
-        verdict = await new Promise(resolve => {
-            let done = false;
-            const finish = v => {
-                if (done) return;
-                done = true;
-                try { if (w) w.terminate(); } catch { }
-                resolve(v);
-            };
-            const t = setTimeout(() => finish("timeout"), 4000);
-            try {
-                w = new Worker("rop_slave.js");
-                w.onmessage = () => { clearTimeout(t); finish("ok"); };
-                w.onerror = () => { clearTimeout(t); finish("worker-error"); };
-                w.postMessage(0);
-            } catch (err) { clearTimeout(t); finish("worker-threw"); }
-        });
-    }
+    let w = null;
+    const verdict = await new Promise(resolve => {
+        let done = false;
+        const finish = v => {
+            if (done) return;
+            done = true;
+            try { if (w) w.terminate(); } catch { }
+            resolve(v);
+        };
+        const t = setTimeout(() => finish("timeout"), 4000);
+        try {
+            w = new Worker("rop_slave.js");
+            w.onmessage = () => { clearTimeout(t); finish("ok"); };
+            w.onerror = () => { clearTimeout(t); finish("worker-error"); };
+            w.postMessage(0);
+        } catch (err) { clearTimeout(t); finish("worker-threw"); }
+    });
     flushMark("WORKER-PROBE", verdict);
     if (verdict !== "ok")
         throw new Error("rop_slave.js is not usable (" + verdict + ")");
