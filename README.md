@@ -1,4 +1,4 @@
-# SpiderKit — Spider Protocol UI43
+# SpiderKit — Spider Protocol UI45
 
 SpiderKit is a visual redesign of Jordy's `slopkit` host. The exploit chain,
 firmware offsets, kernel stages, loader flow and bundled binaries are retained
@@ -23,7 +23,7 @@ have been redesigned for a clearer controller-first experience.
 
 The `RUN` action preserves the upstream URL and parameters:
 
-`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=44`
+`slopkit/poops.html?go=1&trigger=netcontrol&payload=1&v=45`
 
 After a successful chain, the runtime exposes its payload menu directly inside
 `slopkit/poops.html`, without navigating or creating a second frame. Selecting
@@ -52,7 +52,7 @@ notes and third-party notices are in `source/PS5-TROPHY-UNLOCKER/`.
 `payloads/kstuff.elf` is the official [EchoStretch Kstuff Lite v1.09 release](https://github.com/EchoStretch/kstuff-lite/releases/tag/v1.09)
 asset, not a locally rebuilt variant. Its expected SHA-256 is
 `ec5212794dc6e44ee8e70fd0549abec6d3dac8c3e03ddbeafd9f869ffe97d4e8`.
-Payload fetches include the UI43 asset revision and `no-store` so GitHub Pages
+Payload fetches include the UI45 asset revision and `no-store` so GitHub Pages
 and the console browser do not silently reuse the previous Kstuff binary.
 
 When the selected firmware file in `offsets/` really finishes loading, the HUD
