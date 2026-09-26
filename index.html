@@ -195,20 +195,61 @@
         percent.textContent = (value < 10 ? "0" : "") + value + "%";
         label.textContent = text;
     }
-    function launch(target, resume) {
+    function currentFirmware() {
+        var match = /PlayStation 5\/(\d+\.\d+)/.exec(navigator.userAgent || "");
+        return match ? match[1] : "";
+    }
+    function offsetUrlForFirmware(firmware) {
+        return firmware ? "offsets/" + encodeURIComponent(firmware) + ".js?v=44" : "";
+    }
+    async function preflightRuntime(resume) {
+        if (resume) return { ok: true, detail: "saved session verification" };
+        var firmware = currentFirmware();
+        if (!firmware)
+            return { ok: false, detail: "PS5 firmware could not be detected" };
+        var url = offsetUrlForFirmware(firmware);
+        try {
+            var response = await fetch(url, { cache: "no-store" });
+            if (!response.ok)
+                return { ok: false, detail: "unsupported firmware " + firmware + " (offset map missing)" };
+            var text = await response.text();
+            if (!text || text.length < 64)
+                return { ok: false, detail: "offset map for firmware " + firmware + " is empty or incomplete" };
+            return { ok: true, detail: "offset map ready for " + firmware };
+        } catch (error) {
+            return { ok: false, detail: "offset map check failed: " + (error && error.message ? error.message : error) };
+        }
+    }
+    async function launch(target, resume) {
         if (launching) return;
         launching = true;
         overlay.className = "on";
         overlay.setAttribute("aria-hidden", "false");
-        document.getElementById("launchTitle").textContent = resume ? "VERIFYING JAILBREAK SESSION" : "OPENING EXPLOIT RUNTIME";
-        setLaunchProgress(8, resume ? "READING SAVED BOOT IDENTITY" : "SECURING ROUTE");
-        window.setTimeout(function () { setLaunchProgress(34, resume ? "RESTORING USERLAND SENDER" : "HANDOFF TO OFFSET SCANNER"); }, 170);
-        window.setTimeout(function () { setLaunchProgress(68, resume ? "CHECKING ELF LOADER" : "STARTING WEBKIT RUNTIME"); }, 360);
-        window.setTimeout(function () { setLaunchProgress(100, resume ? "HANDOFF TO LIVE VERIFICATION" : "RUNTIME ONLINE"); }, 570);
-        window.setTimeout(function () { location.href = target; }, 760);
+        document.getElementById("launchTitle").textContent = resume ? "VERIFYING JAILBREAK SESSION" : "CHECKING JAILBREAK PREFLIGHT";
+        setLaunchProgress(8, resume ? "READING SAVED BOOT IDENTITY" : "CHECKING FIRMWARE SUPPORT");
+
+        var preflight = await preflightRuntime(resume);
+        if (!preflight.ok) {
+            launching = false;
+            setLaunchProgress(0, "PREFLIGHT BLOCKED");
+            document.getElementById("launchTitle").textContent = "SAFE ABORT";
+            document.getElementById("status").textContent = "JAILBREAK NOT STARTED // " + preflight.detail.toUpperCase();
+            document.getElementById("payloadLock").className = "payload-lock";
+            document.getElementById("payloadLockState").textContent = "PREFLIGHT FAILED";
+            window.setTimeout(function () {
+                overlay.className = "";
+                overlay.setAttribute("aria-hidden", "true");
+            }, 1400);
+            return;
+        }
+
+        setLaunchProgress(34, resume ? "RESTORING USERLAND SENDER" : "OFFSET MAP VERIFIED");
+        window.setTimeout(function () { setLaunchProgress(68, resume ? "CHECKING ELF LOADER" : "STARTING WEBKIT RUNTIME"); }, 170);
+        window.setTimeout(function () { setLaunchProgress(100, resume ? "HANDOFF TO LIVE VERIFICATION" : "RUNTIME ONLINE"); }, 360);
+        window.setTimeout(function () { location.href = target; }, 520);
     }
-    var match = /PlayStation 5\/(\d+\.\d+)/.exec(navigator.userAgent || "");
-    if (match) document.getElementById("firmwareValue").textContent = "PS5 // " + match[1];
+    var detectedFirmware = currentFirmware();
+    if (detectedFirmware) document.getElementById("firmwareValue").textContent = "PS5 // " + detectedFirmware;
     start.addEventListener("click", function (event) {
         if (event && event.preventDefault) event.preventDefault();
         document.getElementById("payloadLock").className = "payload-lock starting";
