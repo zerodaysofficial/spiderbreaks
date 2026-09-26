@@ -1040,6 +1040,10 @@ async function sendPayloadToElfldr(name) {
                 if (result.failed || result.s32 <= 0)
                     throw payloadSyscallError("write at byte "
                         + (sent + blockSent), result);
+                const remaining = blockSize - blockSent;
+                if (result.s32 > remaining)
+                    throw new Error("write returned more bytes than requested at byte "
+                        + (sent + blockSent));
                 blockSent += result.s32;
             }
             sent += blockSize;
@@ -1367,7 +1371,7 @@ function unloadBeaconInner(kind) {
 window.addEventListener("pagehide", () => unloadBeacon("pagehide"));
 window.addEventListener("beforeunload", event => {
     unloadBeacon("beforeunload");
-    if (!payloadSessionActive) return;
+    if (!payloadSessionActive && !runInFlight) return;
     try {
         event.preventDefault();
         event.returnValue = "";
