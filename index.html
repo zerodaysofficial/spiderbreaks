@@ -155,7 +155,7 @@
           <button class="locked-payload" type="button" data-name="pldmgr_v0.5.1.elf" disabled><strong>PLDMGR</strong><small>pldmgr_v0.5.1.elf</small></button>
         </div>
       </section>
-      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=44" tabindex="0"><span class="action-copy"><strong id="startTitle">BRAND NEW JAILBREAK</strong><small id="startSub">START THE SPIDER PROTOCOL</small></span><span class="cross" aria-hidden="true">×</span></a>
+      <a id="start" class="action" href="slopkit/poops.html?go=1&amp;trigger=netcontrol&amp;payload=1&amp;v=45" tabindex="0"><span class="action-copy"><strong id="startTitle">BRAND NEW JAILBREAK</strong><small id="startSub">START THE SPIDER PROTOCOL</small></span><span class="cross" aria-hidden="true">×</span></a>
       <div id="status" aria-live="polite">PRESS × TO CONTINUE // SPIDER-SENSE ONLINE</div>
     </div>
   </section>
@@ -174,7 +174,7 @@
             sessionStorage.removeItem("slopkit-poops:next");
             sessionStorage.removeItem("slopkit-poops:last");
         } catch (e) { }
-        try { history.replaceState(null, "", "index.html?v=44"); } catch (e) { }
+        try { history.replaceState(null, "", "index.html?v=45"); } catch (e) { }
     }
     var start = document.getElementById("start");
     var overlay = document.getElementById("launchOverlay");
@@ -221,7 +221,7 @@
         return match ? match[1] : "";
     }
     function offsetUrlForFirmware(firmware) {
-        return firmware ? "offsets/" + encodeURIComponent(firmware) + ".js?v=44" : "";
+        return firmware ? "offsets/" + encodeURIComponent(firmware) + ".js?v=45" : "";
     }
     async function preflightRuntime(resume) {
         if (resume) return { ok: true, detail: "saved session verification" };
@@ -295,7 +295,7 @@
         document.getElementById("startTitle").textContent = "VERIFY JAILBREAK";
         document.getElementById("startSub").textContent = "CHECK BOOT MEMORY AND RESTORE PAYLOADS";
         document.getElementById("status").textContent = "SAVED SESSION FOUND // VERIFYING CONSOLE BOOT";
-        start.href = "slopkit/poops.html?go=1&trigger=netcontrol&resume=1&payload=1&v=44";
+        start.href = "slopkit/poops.html?go=1&trigger=netcontrol&resume=1&payload=1&v=45";
         window.setTimeout(function () { launch(start.href, true); }, 650);
     } else {
         try { start.focus(); } catch (e) { }
