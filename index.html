@@ -216,30 +216,23 @@
         percent.textContent = (value < 10 ? "0" : "") + value + "%";
         label.textContent = text;
     }
+    var SUPPORTED_FIRMWARES = {
+        "9.00":1, "9.20":1, "9.40":1, "9.60":1,
+        "10.00":1, "10.01":1, "10.20":1, "10.40":1, "10.60":1,
+        "11.00":1, "11.20":1, "11.40":1, "11.60":1, "12.00":1
+    };
     function currentFirmware() {
         var match = /PlayStation 5\/(\d+\.\d+)/.exec(navigator.userAgent || "");
         return match ? match[1] : "";
     }
-    function offsetUrlForFirmware(firmware) {
-        return firmware ? "offsets/" + encodeURIComponent(firmware) + ".js?v=45" : "";
-    }
-    async function preflightRuntime(resume) {
-        if (resume) return { ok: true, detail: "saved session verification" };
+    function preflightRuntime(resume) {
+        if (resume) return Promise.resolve({ ok: true, detail: "saved session verification" });
         var firmware = currentFirmware();
         if (!firmware)
-            return { ok: false, detail: "PS5 firmware could not be detected" };
-        var url = offsetUrlForFirmware(firmware);
-        try {
-            var response = await fetch(url, { cache: "no-store" });
-            if (!response.ok)
-                return { ok: false, detail: "unsupported firmware " + firmware + " (offset map missing)" };
-            var text = await response.text();
-            if (!text || text.length < 64)
-                return { ok: false, detail: "offset map for firmware " + firmware + " is empty or incomplete" };
-            return { ok: true, detail: "offset map ready for " + firmware };
-        } catch (error) {
-            return { ok: false, detail: "offset map check failed: " + (error && error.message ? error.message : error) };
-        }
+            return Promise.resolve({ ok: false, detail: "PS5 firmware could not be detected" });
+        if (!SUPPORTED_FIRMWARES[firmware])
+            return Promise.resolve({ ok: false, detail: "unsupported firmware " + firmware });
+        return Promise.resolve({ ok: true, detail: "firmware profile ready for " + firmware });
     }
     async function launch(target, resume) {
         if (launching) return;
@@ -264,10 +257,9 @@
             return;
         }
 
-        setLaunchProgress(34, resume ? "RESTORING USERLAND SENDER" : "OFFSET MAP VERIFIED");
-        window.setTimeout(function () { setLaunchProgress(68, resume ? "CHECKING ELF LOADER" : "STARTING WEBKIT RUNTIME"); }, 170);
-        window.setTimeout(function () { setLaunchProgress(100, resume ? "HANDOFF TO LIVE VERIFICATION" : "RUNTIME ONLINE"); }, 360);
-        window.setTimeout(function () { location.href = target; }, 520);
+        setLaunchProgress(68, resume ? "CHECKING ELF LOADER" : "STARTING WEBKIT RUNTIME");
+        setLaunchProgress(100, resume ? "HANDOFF TO LIVE VERIFICATION" : "RUNTIME ONLINE");
+        location.href = target;
     }
     var detectedFirmware = currentFirmware();
     if (detectedFirmware) document.getElementById("firmwareValue").textContent = "PS5 // " + detectedFirmware;
@@ -296,7 +288,7 @@
         document.getElementById("startSub").textContent = "CHECK BOOT MEMORY AND RESTORE PAYLOADS";
         document.getElementById("status").textContent = "SAVED SESSION FOUND // VERIFYING CONSOLE BOOT";
         start.href = "slopkit/poops.html?go=1&trigger=netcontrol&resume=1&payload=1&v=45";
-        window.setTimeout(function () { launch(start.href, true); }, 650);
+        launch(start.href, true);
     } else {
         try { start.focus(); } catch (e) { }
     }
