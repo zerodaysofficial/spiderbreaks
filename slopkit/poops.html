@@ -217,7 +217,7 @@
   <a class="payloadTile" href="#" data-code="BPK" data-size="97 KiB" data-name="ps5-backpork.elf" data-state="default">BPK // ps5-backpork.elf // 97 KiB // READY</a>
   <a class="payloadTile" href="#" data-code="PLD" data-size="2.3 MiB" data-name="pldmgr_v0.5.1.elf" data-state="default">PLD // pldmgr_v0.5.1.elf // 2.3 MiB // READY</a>
   <div id="payloadMessage" aria-live="polite">PAYLOADS READY // FOR GAMES, SEND KSTUFF FIRST AND WAIT FOR ITS NOTIFICATION</div>
-  <a id="payloadReset" href="../index.html?fresh=1&amp;v=44">FULL REBOOT DONE? START A NEW JAILBREAK</a>
+  <a id="payloadReset" href="../index.html?fresh=1&amp;v=45">FULL REBOOT DONE? START A NEW JAILBREAK</a>
 </div>
 <div id="nav"></div>
 <div id="arm" hidden>Open this page with <b>?go=1</b> to arm it. Nothing runs
@@ -280,7 +280,7 @@ const CORE_OVERRIDE = Q.has("core") ? parseInt(Q.get("core"), 10) : -1;
 const PROGRESS_KEY = "slopkit-poops:next";
 const RUNLOG_KEY = "slopkit-poops:last";
 const PAYLOAD_SESSION_KEY = "spiderkit:payload-session";
-const REV = "slopkit-poops-44-boot-aware-live-resume";
+const REV = "slopkit-poops-45-stability-guardrails";
 
 function storeGet(k) {
     try { return sessionStorage.getItem(k) || ""; } catch { return ""; }
@@ -712,7 +712,7 @@ let payloadSendBusy = false;
 const PAYLOAD_PORT = 9021;
 const PAYLOAD_BUFFER_SIZE = 0x10000;
 const PAYLOAD_MAX_SIZE = 0xC00000;
-const PAYLOAD_ASSET_REV = "44";
+const PAYLOAD_ASSET_REV = "45";
 const PAYLOAD_COOLDOWN_MS = 1200;
 const PAYLOAD_SHA256 = Object.freeze({
     "kstuff.elf": "ec5212794dc6e44ee8e70fd0549abec6d3dac8c3e03ddbeafd9f869ffe97d4e8",
